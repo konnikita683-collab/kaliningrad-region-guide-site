@@ -3,11 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Гайд по Калининградской области — мобильный помощник, который собирает персональную программу поездки по дням с учётом дат, городов проживания, транспорта, сезона и интересов.">
+  <meta name="description" content="Гайд по Калининградской области — мобильный помощник, который собирает персональную программу поездки по дням с учётом дат, городов проживания, транспорта, сезона, погоды и интересов.">
+  <meta name="theme-color" content="#f4eee4">
   <title>Гайд по Калининградской области</title>
   <style>
-    :root{--bg:#f4eee4;--card:#fffdf8;--text:#1f2a2b;--muted:#6d736e;--line:#ddd3c4;--accent:#2f6f6c;--soft:#e7efeb;--sand:#f2ebdf}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.wrap{max-width:980px;margin:auto;padding:0 22px}.hero{padding:76px 0 48px}.kicker{font-size:14px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}h1{font-size:clamp(38px,7vw,68px);line-height:1.02;margin:14px 0 20px;max-width:900px}.lead{font-size:clamp(19px,2.5vw,26px);color:var(--muted);max-width:760px}.pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:28px}.pill{padding:9px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-weight:750}.panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:30px;margin:20px 0}.panel h2{font-size:30px;margin:0 0 10px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.feature{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fff}.feature b{font-size:17px;display:block;margin-bottom:5px}.steps{display:grid;gap:10px;margin-top:18px}.step{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:0}.num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:900}.status{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--soft);color:var(--accent);font-weight:850}.commercial{background:var(--sand)}footer{padding:28px 0 50px;color:var(--muted);font-size:14px}a{color:var(--accent)}@media(max-width:760px){.hero{padding-top:46px}.grid{grid-template-columns:1fr}.panel{padding:22px;border-radius:22px}h1{font-size:42px}.lead{font-size:19px}}
+    :root{--bg:#f4eee4;--card:#fffdf8;--text:#1f2a2b;--muted:#6d736e;--line:#ddd3c4;--accent:#2f6f6c;--accent2:#5c7a68;--soft:#e7efeb;--sand:#f2ebdf;--warn:#f5e7c8}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.wrap{max-width:1080px;margin:auto;padding:0 22px}.hero{padding:72px 0 42px}.kicker{font-size:14px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}h1{font-size:clamp(40px,7vw,72px);line-height:1.01;margin:14px 0 20px;max-width:930px}.lead{font-size:clamp(19px,2.4vw,26px);color:var(--muted);max-width:800px}.pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:28px}.pill{padding:9px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-weight:750}.top-note{display:flex;gap:10px;align-items:center;margin-top:26px;color:var(--muted);font-size:14px}.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px rgba(47,111,108,.12)}.panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:30px;margin:20px 0}.panel h2{font-size:32px;line-height:1.1;margin:0 0 10px}.panel h3{margin:0}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.feature{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fff}.feature b{font-size:17px;display:block;margin-bottom:5px}.steps{display:grid;gap:10px;margin-top:18px}.step{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:0}.num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:900}.status{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--soft);color:var(--accent);font-weight:850}.commercial{background:var(--sand)}
+    .showcase{padding:6px 0 12px}.showcase-head{margin-bottom:18px}.phones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.phone{background:#202928;border-radius:34px;padding:9px;box-shadow:0 18px 50px rgba(31,42,43,.12);min-width:0}.screen{background:var(--bg);border-radius:27px;overflow:hidden;min-height:535px}.screen-top{padding:18px 17px 15px;background:var(--card);border-bottom:1px solid var(--line)}.mini-kicker{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);font-weight:900}.screen-title{font-size:19px;line-height:1.15;font-weight:900;margin-top:5px}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:11px}.tab{padding:9px 6px;border-radius:11px;background:var(--card);border:1px solid var(--line);font-size:10px;font-weight:850;text-align:center}.tab.on{background:var(--accent);color:#fff;border-color:var(--accent)}.screen-body{padding:11px}.mini-card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:13px;margin-bottom:10px}.mini-card b{display:block;font-size:13px}.mini-card small{display:block;color:var(--muted);font-size:9px;margin-top:4px;line-height:1.35}.choices{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}.choice{border:1px solid var(--line);border-radius:9px;padding:8px 7px;font-size:9px;font-weight:800;text-align:center;background:#fff}.choice.sel{background:var(--soft);color:var(--accent);border-color:var(--accent)}.mini-btn{margin-top:10px;border-radius:10px;padding:9px 10px;background:var(--accent);color:#fff;font-size:10px;text-align:center;font-weight:900}.day-head{font-size:10px;color:var(--accent);font-weight:900}.day-name{font-size:17px;line-height:1.13;font-weight:900;margin-top:4px}.meta{font-size:9px;color:var(--muted);margin-top:4px}.badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.badge{font-size:8px;padding:5px 6px;border-radius:999px;background:var(--sand)}.weather{margin-top:9px;padding-top:8px;border-top:1px solid var(--line)}.weather strong{font-size:12px}.agenda{display:grid;grid-template-columns:70px 1fr;gap:7px 9px;margin-top:9px;font-size:9px}.agenda span:nth-child(odd){color:var(--accent2);font-weight:850}.event-label{font-size:9px;color:var(--accent);font-weight:900}.event-title{font-size:15px;font-weight:900;line-height:1.15;margin-top:4px}.event-info{font-size:9px;color:var(--muted);margin-top:6px}.event-add{margin-top:9px;border:1px solid var(--accent);color:var(--accent);border-radius:9px;padding:8px;text-align:center;font-size:9px;font-weight:900}.car-provider{display:flex;justify-content:space-between;gap:8px;align-items:center}.provider-name{font-size:14px;font-weight:900}.provider-type{font-size:8px;color:var(--muted)}.terms{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.term span{display:block;font-size:7px;text-transform:uppercase;color:var(--muted)}.term b{font-size:9px}.caption{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
+    .principles{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:start}.principle-box{padding:18px;border-radius:18px;background:#fff;border:1px solid var(--line)}.principle-box b{display:block;margin-bottom:5px}.cta{display:flex;justify-content:space-between;gap:18px;align-items:center;background:var(--accent);color:#fff;border-radius:26px;padding:26px 28px;margin:20px 0}.cta b{font-size:24px}.cta span{opacity:.86}.cta .tag{white-space:nowrap;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);padding:9px 12px;border-radius:999px;font-size:13px;font-weight:850}.legal-note{font-size:13px;color:var(--muted)}footer{padding:28px 0 50px;color:var(--muted);font-size:14px}a{color:var(--accent)}
+    @media(max-width:900px){.phones{grid-template-columns:1fr 1fr}.principles{grid-template-columns:1fr}.phone:last-child{grid-column:1/-1;max-width:390px;margin:auto;width:100%}}
+    @media(max-width:650px){.hero{padding-top:46px}.grid,.phones{grid-template-columns:1fr}.phone:last-child{grid-column:auto;max-width:none}.panel{padding:22px;border-radius:22px}h1{font-size:42px}.lead{font-size:19px}.screen{min-height:500px}.cta{display:block}.cta .tag{display:inline-block;margin-top:14px}.principles{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -16,17 +21,59 @@
       <div class="kicker">Мобильное приложение · Калининградская область</div>
       <h1>Гайд, который собирает поездку за несколько шагов</h1>
       <p class="lead">Пользователь указывает даты, состав поездки, города проживания, отношение к автомобилю и интересы — приложение формирует готовую программу по дням, а не каталог мест.</p>
-      <div class="pills"><span class="pill">Маршрут по дням</span><span class="pill">Сезонность</span><span class="pill">Погода</span><span class="pill">Жильё</span><span class="pill">Автомобиль</span><span class="pill">События</span></div>
+      <div class="pills"><span class="pill">Маршрут по дням</span><span class="pill">Погода</span><span class="pill">Жильё</span><span class="pill">Автомобиль</span><span class="pill">События</span><span class="pill">Сезонные сценарии</span></div>
+      <div class="top-note"><span class="dot"></span><span>Android-версия находится в активной разработке и тестировании.</span></div>
     </section>
 
     <section class="panel">
-      <span class="status">● Проект в активной разработке</span>
-      <h2 style="margin-top:18px">Что делает приложение</h2>
-      <p class="muted">«Гайд по Калининградской области» помогает самостоятельно спланировать отдых в Калининграде и городах области. Маршрут учитывает реальные даты поездки, смену мест проживания, первый и последний день, доступность автомобиля, сезон и характер отдыха.</p>
+      <span class="status">● Персональное планирование</span>
+      <h2 style="margin-top:18px">Не список достопримечательностей, а готовая поездка</h2>
+      <p class="muted">«Гайд по Калининградской области» помогает самостоятельно спланировать отдых в Калининграде и городах области. Маршрут учитывает реальные даты поездки, смену мест проживания, первый и последний день, доступность автомобиля, сезон, погоду и характер отдыха.</p>
       <div class="grid">
         <div class="feature"><b>Готовые дни</b><span class="muted">Для каждого дня — понятный сценарий с ключевыми местами, ритмом и логистикой.</span></div>
-        <div class="feature"><b>Несколько баз</b><span class="muted">Можно распределить проживание между Калининградом, Зеленоградском, Светлогорском и другими городами области.</span></div>
-        <div class="feature"><b>Актуальный контекст</b><span class="muted">Погода, сезонные ограничения, события и графики объектов используются как часть планирования.</span></div>
+        <div class="feature"><b>Несколько городов проживания</b><span class="muted">Можно распределить проживание между Калининградом, Зеленоградском, Светлогорском и другими городами области.</span></div>
+        <div class="feature"><b>Контекст поездки</b><span class="muted">Погода, сезонные ограничения, события и графики объектов используются как часть планирования.</span></div>
+      </div>
+    </section>
+
+    <section class="panel showcase">
+      <div class="showcase-head"><div class="kicker">Примеры интерфейса</div><h2>Как выглядит работа с приложением</h2><p class="muted">Ниже — упрощённые представления основных экранов текущей версии. Финальный интерфейс может немного измениться к релизу.</p></div>
+      <div class="phones">
+        <div>
+          <div class="phone"><div class="screen">
+            <div class="screen-top"><div class="mini-kicker">Гайд по Калининградской области</div><div class="screen-title">Соберём вашу поездку за несколько шагов</div></div>
+            <div class="tabs"><div class="tab on">Настройка</div><div class="tab">По дням</div><div class="tab">Автомобиль</div><div class="tab">События</div></div>
+            <div class="screen-body">
+              <div class="mini-card"><b>Кто едет?</b><small>Состав семьи влияет на ритм, длительность и выбор сценариев.</small><div class="choices"><div class="choice sel">2 взрослых</div><div class="choice sel">2 ребёнка</div></div></div>
+              <div class="mini-card"><b>Где будете жить?</b><small>Можно выбрать один или несколько городов.</small><div class="choices"><div class="choice sel">Зеленоградск</div><div class="choice">Калининград</div><div class="choice">Светлогорск</div><div class="choice">Янтарный</div></div></div>
+              <div class="mini-card"><b>Автомобиль</b><small>Приложение понимает, нужен ли он на всю поездку или только на отдельные дни.</small><div class="choices"><div class="choice sel">Без машины</div><div class="choice">Готов арендовать</div></div></div>
+              <div class="mini-btn">Собрать поездку</div>
+            </div>
+          </div></div><div class="caption">1 · Несколько коротких вопросов</div>
+        </div>
+
+        <div>
+          <div class="phone"><div class="screen">
+            <div class="screen-top"><div class="mini-kicker">План по дням</div><div class="screen-title">День 1 · Зеленоградск</div></div>
+            <div class="tabs"><div class="tab">Настройка</div><div class="tab on">По дням</div><div class="tab">Автомобиль</div><div class="tab">События</div></div>
+            <div class="screen-body">
+              <div class="mini-card"><div class="day-head">День приезда · Зеленоградск</div><div class="day-name">Курортный проспект и первый выход к морю</div><div class="meta">без автомобиля · лёгкий темп · 2–5 ч</div><div class="badges"><span class="badge">после заселения</span><span class="badge">без жёсткого тайминга</span></div><div class="weather"><small>ПОГОДА</small><br><strong>Прогноз обновится ближе к дате</strong></div><div class="agenda"><span>после заселения</span><b>Курортный проспект</b><span>вечер</span><b>Променад и ужин</b></div><div class="mini-btn">Открыть день</div></div>
+              <div class="mini-card"><div class="day-head">День 2 · Калининград</div><div class="day-name">Город, музеи и остров Канта</div><div class="meta">поезд / городской транспорт · средний темп</div><div class="agenda"><span>10:00</span><b>Центр и остров Канта</b><span>14:00</span><b>Музейный блок</b><span>вечер</span><b>Ужин и возвращение</b></div></div>
+            </div>
+          </div></div><div class="caption">2 · Готовый маршрут на каждый день</div>
+        </div>
+
+        <div>
+          <div class="phone"><div class="screen">
+            <div class="screen-top"><div class="mini-kicker">Дополнительные сервисы</div><div class="screen-title">Только когда они реально нужны</div></div>
+            <div class="tabs"><div class="tab">Настройка</div><div class="tab">По дням</div><div class="tab on">Автомобиль</div><div class="tab">События</div></div>
+            <div class="screen-body">
+              <div class="mini-card"><div class="car-provider"><div><div class="provider-name">Автомобиль нужен на 2 дня</div><div class="provider-type">по текущему маршруту</div></div></div><small>Приложение предлагает аренду именно на те дни, когда машина действительно полезна.</small></div>
+              <div class="mini-card"><div class="car-provider"><div><div class="provider-name">Amber Car</div><div class="provider-type">местный прокат</div></div></div><div class="terms"><div class="term"><span>Залог</span><b>0 ₽</b></div><div class="term"><span>Пробег</span><b>по тарифу</b></div><div class="term"><span>Топливо</span><b>полный → полный</b></div><div class="term"><span>Получение</span><b>по условиям</b></div></div><div class="mini-btn">Смотреть автомобили</div></div>
+              <div class="mini-card"><div class="event-label">Событие на ваши даты</div><div class="event-title">Концерт / спектакль / фестиваль</div><div class="event-info">Показывается только если мероприятие попадает в период поездки и подходит по городу конкретного дня.</div><div class="event-add">Добавить в день</div></div>
+            </div>
+          </div></div><div class="caption">3 · Жильё, авто и события в контексте поездки</div>
+        </div>
       </div>
     </section>
 
@@ -34,20 +81,25 @@
       <h2>Как работает подбор</h2>
       <div class="steps">
         <div class="step"><div class="num">1</div><div><b>Пользователь задаёт параметры поездки</b><div class="muted">Даты, взрослые и дети, города проживания, автомобиль и интересы.</div></div></div>
-        <div class="step"><div class="num">2</div><div><b>Приложение собирает программу</b><div class="muted">Сценарии распределяются по дням с учётом логистики, сезона и режима работы объектов.</div></div></div>
-        <div class="step"><div class="num">3</div><div><b>Сервисы подключаются в нужный момент</b><div class="muted">Если пользователю требуется жильё, автомобиль или билет на событие, приложение предлагает перейти к соответствующему сервису.</div></div></div>
+        <div class="step"><div class="num">2</div><div><b>Приложение собирает программу</b><div class="muted">Сценарии распределяются по дням с учётом логистики, сезона, погоды и режима работы объектов.</div></div></div>
+        <div class="step"><div class="num">3</div><div><b>Сервисы появляются только в подходящий момент</b><div class="muted">Если требуется жильё, автомобиль или билет на событие, пользователь может перейти к соответствующему внешнему сервису.</div></div></div>
       </div>
     </section>
 
     <section class="panel commercial">
-      <h2>Партнёрские сервисы</h2>
-      <p>Приложение планирует подключение партнёрских инструментов бронирования жилья, аренды автомобиля и покупки билетов. Партнёрское вознаграждение не определяет порядок рекомендаций: сначала выбирается подходящий пользователю вариант, затем при наличии партнёрской интеграции используется соответствующая ссылка.</p>
-      <p class="muted">Переход на сайт внешнего сервиса совершается только по явному действию пользователя. Бронирование, оплата и договорные отношения происходят на стороне выбранного сервиса.</p>
+      <h2>Партнёрские сервисы без рекламной витрины</h2>
+      <div class="principles">
+        <div><p>В приложение подключаются инструменты бронирования жилья, аренды автомобиля и покупки билетов. Партнёрское вознаграждение не определяет порядок рекомендаций: сначала выбирается подходящий пользователю вариант, а партнёрская ссылка используется только при наличии соответствующей интеграции.</p><p class="muted">Переход на внешний сайт происходит только после действия пользователя. Бронирование, оплата, возвраты и договорные отношения происходят на стороне выбранного сервиса.</p></div>
+        <div class="principle-box"><b>Принцип продукта</b><span class="muted">Пользователь не должен видеть «монетизацию». Он должен видеть удобный следующий шаг: найти жильё, взять машину на нужные дни или купить билет на мероприятие.</span></div>
+      </div>
     </section>
+
+    <section class="cta"><div><b>Android-приложение готовится к первой релизной версии</b><br><span>Сейчас идёт подключение внешних сервисов и финальная проверка пользовательских сценариев.</span></div><div class="tag">Beta · 2026</div></section>
 
     <section class="panel">
       <h2>О проекте</h2>
       <p class="muted">Независимый цифровой продукт для путешествий по Калининградской области. Цель — сократить время на самостоятельное планирование и дать пользователю реалистичную, понятную программу отдыха.</p>
+      <p class="legal-note">Приложение не является туроператором и не принимает оплату за услуги внешних сервисов. Информация о расписаниях, погоде, билетах и условиях партнёров может меняться и уточняется ближе к дате поездки.</p>
       <p><a href="privacy.html">Политика конфиденциальности и партнёрских переходов</a></p>
     </section>
   </main>
