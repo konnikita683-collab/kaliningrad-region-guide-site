@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Гайд по Калининградской области — мобильный помощник, который собирает персональную программу поездки по дням с учётом дат, городов проживания, транспорта, сезона и интересов.">
+  <title>Гайд по Калининградской области</title>
+  <style>
+    :root{--bg:#f4eee4;--card:#fffdf8;--text:#1f2a2b;--muted:#6d736e;--line:#ddd3c4;--accent:#2f6f6c;--soft:#e7efeb;--sand:#f2ebdf}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.wrap{max-width:980px;margin:auto;padding:0 22px}.hero{padding:76px 0 48px}.kicker{font-size:14px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}h1{font-size:clamp(38px,7vw,68px);line-height:1.02;margin:14px 0 20px;max-width:900px}.lead{font-size:clamp(19px,2.5vw,26px);color:var(--muted);max-width:760px}.pills{display:flex;gap:9px;flex-wrap:wrap;margin-top:28px}.pill{padding:9px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-weight:750}.panel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:30px;margin:20px 0}.panel h2{font-size:30px;margin:0 0 10px}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.feature{border:1px solid var(--line);border-radius:18px;padding:18px;background:#fff}.feature b{font-size:17px;display:block;margin-bottom:5px}.steps{display:grid;gap:10px;margin-top:18px}.step{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:0}.num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:900}.status{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--soft);color:var(--accent);font-weight:850}.commercial{background:var(--sand)}footer{padding:28px 0 50px;color:var(--muted);font-size:14px}a{color:var(--accent)}@media(max-width:760px){.hero{padding-top:46px}.grid{grid-template-columns:1fr}.panel{padding:22px;border-radius:22px}h1{font-size:42px}.lead{font-size:19px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="kicker">Мобильное приложение · Калининградская область</div>
+      <h1>Гайд, который собирает поездку за несколько шагов</h1>
+      <p class="lead">Пользователь указывает даты, состав поездки, города проживания, отношение к автомобилю и интересы — приложение формирует готовую программу по дням, а не каталог мест.</p>
+      <div class="pills"><span class="pill">Маршрут по дням</span><span class="pill">Сезонность</span><span class="pill">Погода</span><span class="pill">Жильё</span><span class="pill">Автомобиль</span><span class="pill">События</span></div>
+    </section>
+
+    <section class="panel">
+      <span class="status">● Проект в активной разработке</span>
+      <h2 style="margin-top:18px">Что делает приложение</h2>
+      <p class="muted">«Гайд по Калининградской области» помогает самостоятельно спланировать отдых в Калининграде и городах области. Маршрут учитывает реальные даты поездки, смену мест проживания, первый и последний день, доступность автомобиля, сезон и характер отдыха.</p>
+      <div class="grid">
+        <div class="feature"><b>Готовые дни</b><span class="muted">Для каждого дня — понятный сценарий с ключевыми местами, ритмом и логистикой.</span></div>
+        <div class="feature"><b>Несколько баз</b><span class="muted">Можно распределить проживание между Калининградом, Зеленоградском, Светлогорском и другими городами области.</span></div>
+        <div class="feature"><b>Актуальный контекст</b><span class="muted">Погода, сезонные ограничения, события и графики объектов используются как часть планирования.</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Как работает подбор</h2>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><div><b>Пользователь задаёт параметры поездки</b><div class="muted">Даты, взрослые и дети, города проживания, автомобиль и интересы.</div></div></div>
+        <div class="step"><div class="num">2</div><div><b>Приложение собирает программу</b><div class="muted">Сценарии распределяются по дням с учётом логистики, сезона и режима работы объектов.</div></div></div>
+        <div class="step"><div class="num">3</div><div><b>Сервисы подключаются в нужный момент</b><div class="muted">Если пользователю требуется жильё, автомобиль или билет на событие, приложение предлагает перейти к соответствующему сервису.</div></div></div>
+      </div>
+    </section>
+
+    <section class="panel commercial">
+      <h2>Партнёрские сервисы</h2>
+      <p>Приложение планирует подключение партнёрских инструментов бронирования жилья, аренды автомобиля и покупки билетов. Партнёрское вознаграждение не определяет порядок рекомендаций: сначала выбирается подходящий пользователю вариант, затем при наличии партнёрской интеграции используется соответствующая ссылка.</p>
+      <p class="muted">Переход на сайт внешнего сервиса совершается только по явному действию пользователя. Бронирование, оплата и договорные отношения происходят на стороне выбранного сервиса.</p>
+    </section>
+
+    <section class="panel">
+      <h2>О проекте</h2>
+      <p class="muted">Независимый цифровой продукт для путешествий по Калининградской области. Цель — сократить время на самостоятельное планирование и дать пользователю реалистичную, понятную программу отдыха.</p>
+      <p><a href="privacy.html">Политика конфиденциальности и партнёрских переходов</a></p>
+    </section>
+  </main>
+  <footer class="wrap">© 2026 «Гайд по Калининградской области». Информационно-планировочный сервис.</footer>
+</body>
+</html>
