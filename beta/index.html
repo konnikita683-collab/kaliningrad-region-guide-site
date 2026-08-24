@@ -5,38 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Гайд по Калининградской области — Beta 0.9</title>
+<title>Гайд по Калининградской области — Beta 0.9 source fix</title>
 <style>
-:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}.err{max-width:560px;line-height:1.5}
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}.err{max-width:620px;line-height:1.5}
 </style>
 </head>
 <body>
-<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка Beta 0.9…</div></div>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Проверка исходного расчёта проживания…</div></div>
 <script>
 (async()=>{
   try{
-    // One-time migration BEFORE the embedded Beta code starts.
-    // The old build had Zelenogradsk + Svetlogorsk selected by default,
-    // which immediately split a 24–28 trip into 24–26 / 26–28 stays.
-    const stateFix='20260824-lodging-state-v3';
-    if(localStorage.getItem('guideWebStateFix')!==stateFix){
-      let prev={};
-      try{prev=JSON.parse(localStorage.getItem('guideOnboarding')||'{}')||{};}catch(_){prev={};}
-      const clean={
-        step:0,
-        adults:Math.max(1,Number(prev.adults)||2),
-        children:Math.max(0,Number(prev.children)||0),
-        cities:[],
-        housing:prev.housing||'have',
-        car:prev.car||'maybe',
-        carDays:Math.max(1,Number(prev.carDays)||2),
-        interests:Array.isArray(prev.interests)&&prev.interests.length?prev.interests:['sea','nature']
-      };
-      // Preserve trip dates if they were already entered, but never preserve
-      // the stale city split from the old build.
-      if(/^\d{4}-\d{2}-\d{2}$/.test(String(prev.start||'')))clean.start=prev.start;
-      if(/^\d{4}-\d{2}-\d{2}$/.test(String(prev.end||'')))clean.end=prev.end;
-      localStorage.setItem('guideOnboarding',JSON.stringify(clean));
+    const params=new URLSearchParams(location.search||'');
+    const stateFix='20260824-source-v4';
+    const forceReset=params.get('reset')==='source-v4';
+    if(forceReset||localStorage.getItem('guideWebStateFix')!==stateFix){
+      localStorage.removeItem('guideOnboarding');
       localStorage.removeItem('guideLodgingOnboarding');
       localStorage.removeItem('guideLodgings');
       localStorage.removeItem('guideGuestAges');
@@ -44,10 +27,10 @@
     }
 
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-state-v3';
+    const stamp='20260824-source-v4';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('./data/'+name+'?v='+stamp,{cache:'no-store'});
-      if(!r.ok)throw new Error(name);
+      if(!r.ok)throw new Error('Не загружен '+name);
       let text=await r.text();
       if(name.startsWith('p001-'))text=text.slice(text.indexOf('\n')+1);
       return text;
@@ -56,15 +39,44 @@
     const binary=atob(encoded);
     const bytes=new Uint8Array(binary.length);
     for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-    if(!('DecompressionStream' in window))throw new Error('browser');
+    if(!('DecompressionStream' in window))throw new Error('Браузер не поддерживает распаковку beta');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-    const html=await new Response(stream).text();
-    const patched=html.replace('</body>','<script src="./hotfix-0.9.js?v='+stamp+'"><\/script></body>');
+    let html=await new Response(stream).text();
+
+    function replaceRequired(re,replacement,label){
+      const next=html.replace(re,replacement);
+      if(next===html)throw new Error('Не найден участок исходного кода: '+label);
+      html=next;
+    }
+
+    // 1. Никаких заранее выбранных городов — ни в старом ядре, ни в onboarding.
+    replaceRequired(/const selected=\[[^\]]*\];/,'const selected=[];','core selected cities');
+    replaceRequired(/var state=Object\.assign\(\{step:0,adults:2,children:0,cities:\[[^\]]*\],housing:/,'var state=Object.assign({step:0,adults:2,children:0,cities:[],housing:','onboarding default cities');
+
+    // 2. Разрешаем снять последний выбранный город. Валидация на «Далее» всё равно не даст продолжить без города.
+    replaceRequired(/if\(i>=0\)\{if\(state\.cities\.length>1\)state\.cities\.splice\(i,1\)\}else state\.cities\.push\(v\)/,'if(i>=0){state.cities.splice(i,1)}else state.cities.push(v)','city toggle');
+
+    // 3. Сохраняем ответы onboarding после каждого шага, а не только в самом конце.
+    replaceRequired(/function next\(\)\{capture\(\);/,'function next(){capture();save(state);','onboarding step persistence');
+
+    // 4. Период поездки берём прежде всего из актуального onboarding.
+    replaceRequired(/function dates\(\)\{[\s\S]*?\}\s*function syncGuideLodgings/,
+      "function dates(){var ob=read('guideOnboarding',{});return{start:ob.start||meta.start||(q('#start')&&q('#start').value)||'',end:ob.end||meta.end||(q('#end')&&q('#end').value)||''};}\n  function syncGuideLodgings",
+      'trip dates source');
+
+    // 5. При изменении набора городов периоды пересчитываются с нуля.
+    // Для одного города он ВСЕГДА занимает всю поездку.
+    replaceRequired(/function ensureStayDates\(cities\)\{[\s\S]*?\}\s*function validate/,
+      "function ensureStayDates(cities){var auto=split(cities),changed=false,selectionChanged=!sameOrder(meta.cityOrder||[],cities);if(selectionChanged||cities.length===1){var rebuilt={};auto.forEach(function(x){var old=meta.cities[x.city]||{};rebuilt[x.city]=Object.assign({},old,{start:x.start,end:x.end});});meta.cities=rebuilt;meta.cityOrder=cities.slice();changed=true;}else{auto.forEach(function(x){meta.cities[x.city]=meta.cities[x.city]||{};var c=meta.cities[x.city];if(!c.start||!c.end){c.start=x.start;c.end=x.end;changed=true;}});Object.keys(meta.cities).forEach(function(city){if(cities.indexOf(city)<0){delete meta.cities[city];changed=true;}});}if(changed)persist();else syncGuideLodgings();return auto;}\n  function validate",
+      'stay recalculation');
+
+    const close='<'+'/script>';
+    html=html.replace('</body>','<script src="./hotfix-0.9.js?v='+stamp+'">'+close+'<script>(function(){var e=document.createElement("div");e.textContent="SOURCE FIX V4";e.style.cssText="position:fixed;right:10px;top:10px;z-index:100000;padding:5px 8px;border-radius:999px;background:#263633;color:white;font:800 10px/1 system-ui;pointer-events:none";document.body.appendChild(e);})();'+close+'</body>');
     document.open();
-    document.write(patched);
+    document.write(html);
     document.close();
   }catch(e){
-    document.body.innerHTML='<div class="load err"><b>Не удалось открыть тестовую версию</b><div class="muted">Обновите Chrome или Safari и откройте ссылку ещё раз.</div></div>';
+    document.body.innerHTML='<div class="load err"><b>Исправленная версия не запущена</b><div class="muted">'+String(e&&e.message||e)+'</div></div>';
   }
 })();
 </script>
