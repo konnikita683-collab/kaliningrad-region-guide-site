@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Гайд по Калининградской области — Beta 0.9</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}.err{max-width:560px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка Beta 0.9…</div></div>
+<script>
+(async()=>{
+  try{
+    const names=['000','001','002','003','004','005','006'];
+    const parts=await Promise.all(names.map(async n=>{
+      const r=await fetch('./data/part-'+n+'.txt',{cache:'no-store'});
+      if(!r.ok)throw new Error('part '+n);
+      return r.text();
+    }));
+    const encoded=parts.join('').replace(/\s+/g,'');
+    const binary=atob(encoded);
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    if(!('DecompressionStream' in window))throw new Error('browser');
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const html=await new Response(stream).text();
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(e){
+    document.body.innerHTML='<div class="load err"><b>Не удалось открыть тестовую версию</b><div class="muted">Обновите Chrome или Safari и откройте ссылку ещё раз.</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
