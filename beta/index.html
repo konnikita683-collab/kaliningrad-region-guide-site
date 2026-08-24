@@ -15,8 +15,36 @@
 <script>
 (async()=>{
   try{
+    // One-time migration BEFORE the embedded Beta code starts.
+    // The old build had Zelenogradsk + Svetlogorsk selected by default,
+    // which immediately split a 24–28 trip into 24–26 / 26–28 stays.
+    const stateFix='20260824-lodging-state-v3';
+    if(localStorage.getItem('guideWebStateFix')!==stateFix){
+      let prev={};
+      try{prev=JSON.parse(localStorage.getItem('guideOnboarding')||'{}')||{};}catch(_){prev={};}
+      const clean={
+        step:0,
+        adults:Math.max(1,Number(prev.adults)||2),
+        children:Math.max(0,Number(prev.children)||0),
+        cities:[],
+        housing:prev.housing||'have',
+        car:prev.car||'maybe',
+        carDays:Math.max(1,Number(prev.carDays)||2),
+        interests:Array.isArray(prev.interests)&&prev.interests.length?prev.interests:['sea','nature']
+      };
+      // Preserve trip dates if they were already entered, but never preserve
+      // the stale city split from the old build.
+      if(/^\d{4}-\d{2}-\d{2}$/.test(String(prev.start||'')))clean.start=prev.start;
+      if(/^\d{4}-\d{2}-\d{2}$/.test(String(prev.end||'')))clean.end=prev.end;
+      localStorage.setItem('guideOnboarding',JSON.stringify(clean));
+      localStorage.removeItem('guideLodgingOnboarding');
+      localStorage.removeItem('guideLodgings');
+      localStorage.removeItem('guideGuestAges');
+      localStorage.setItem('guideWebStateFix',stateFix);
+    }
+
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-4';
+    const stamp='20260824-state-v3';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('./data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error(name);
