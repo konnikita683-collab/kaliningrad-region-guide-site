@@ -15,9 +15,13 @@
 <script>
 (async()=>{
   try{
-    ['guideOnboarding','guideGuestAges','guideLodgingOnboarding','guideLodgings'].forEach(k=>localStorage.removeItem(k));
+    const resetKey='housingSmoke20260824v1';
+    if(!sessionStorage.getItem(resetKey)){
+      ['guideOnboarding','guideGuestAges','guideLodgingOnboarding','guideLodgings'].forEach(k=>localStorage.removeItem(k));
+      sessionStorage.setItem(resetKey,'1');
+    }
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-hoteltest-1';
+    const stamp='20260824-hoteltest-2';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('./data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error(name);
