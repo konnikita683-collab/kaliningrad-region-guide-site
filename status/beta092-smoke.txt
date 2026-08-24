@@ -1,26 +1,6 @@
-status=FAIL
-source_sha=879fce5dda0a024799688a7a328939dbb3c3d3ad
-error=onboarding host count=0, visible=false
-body=ГАЙД ПО КАЛИНИНГРАДСКОЙ ОБЛАСТИ
-Соберём вашу поездку за несколько шагов
-Настройка
-По дням
-Автомобиль
-События
-Новая поездка
-Когда едете?
-Ответьте на несколько коротких вопросов — остальное можно изменить позже.
-1 из 5
-Когда едете?
-
-Даты можно изменить в любой момент.
-
-Начало
-Конец
-Далее
-BETA 0.9
-BETA MODULE ERROR
-ids=["STYLE#housing-onboarding-style.","SECTION#setup.view active","DIV#wizard.card","DIV#progress.progress","DIV#step.","INPUT#a.","INPUT#b.","BUTTON#back.back","BUTTON#next.next","DIV#tripSummary.hidden","DIV#summary.summary","SECTION#days.view","DIV#daysList.empty","SECTION#car.view","DIV#carInfo.","SECTION#events.view","DIV#eventList.","SCRIPT#external-beta-09.","DIV#beta09Badge."]
-newTrip=["<section id=\"setup\" class=\"view active\">\n  <div id=\"wizard\" class=\"card\">\n    <span class=\"kicker\">Новая поездка</span>\n    <h2 style=\"margin:5px 0 4px\">Когда едете?</h2>\n    <div style=\"color:var(--muted)\">Ответьте на несколько коротких вопросов — остальное можно изменить позже.</div>\n    <div class=\"progress\" id=\"progress\"><i class=\"on\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i></div>\n    <div id=\"step\"><div class=\"step\"><small>1 из 5</small><h2>Когда едете?</h2><p>Даты можно изменить в любой момент.</p><div class=\"grid\"><label>Начало<input id=\"a\" type=\"date\" value=\"2026-08-24\"></label><label>Конец<input id=\"b\" type=\"date\" value=\"2026-08-28\"></label></div></div></div>\n    <div class=\"nav\"><button class=\"back\" id=\"back\" style=\"visibility: hidden;\">Назад</button><button class=\"next\" id=\"next\">Далее</button></div>\n  </div>\n  <div id=\"tripSummary\" class=\"hidden\">\n    <div class=\"summary\" id=\"summary\"></div>\n    <div class=\"card\"><b>Поездка готова</b><p style=\"color:var(--muted);margin-bottom:12px\">Откройте вкладку «По дням». Любой день можно заменить целиком.</p><button type=\"button\" class=\"edit-trip-btn\" onclick=\"editTrip()\">Изменить параметры поездки</butt","<div id=\"wizard\" class=\"card\">\n    <span class=\"kicker\">Новая поездка</span>\n    <h2 style=\"margin:5px 0 4px\">Когда едете?</h2>\n    <div style=\"color:var(--muted)\">Ответьте на несколько коротких вопросов — остальное можно изменить позже.</div>\n    <div class=\"progress\" id=\"progress\"><i class=\"on\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i></div>\n    <div id=\"step\"><div class=\"step\"><small>1 из 5</small><h2>Когда едете?</h2><p>Даты можно изменить в любой момент.</p><div class=\"grid\"><label>Начало<input id=\"a\" type=\"date\" value=\"2026-08-24\"></label><label>Конец<input id=\"b\" type=\"date\" value=\"2026-08-28\"></label></div></div></div>\n    <div class=\"nav\"><button class=\"back\" id=\"back\" style=\"visibility: hidden;\">Назад</button><button class=\"next\" id=\"next\">Далее</button></div>\n  </div>"]
-scripts=["inline","inline","inline","inline","http://127.0.0.1:8000/beta091/modules/onboarding-beta-ui.js?v=20260824-beta092-isolated-1","http://127.0.0.1:8000/beta091/modules/housing-onboarding.js?v=20260824-beta092-isolated-1","inline"]
-logs=[]
+status=DIAG
+source_sha=2f2f32285e68c5b70e4191bcaaf8e0f69632ba98
+step2=<div class="step"><small>2 из 5</small><h2>Кто едет?</h2><p>Это влияет на темп и подбор сценариев.</p><div class="grid"><label>Взрослые<input id="ad" type="number" min="1" value="2"></label><label>Дети<input id="ch" type="number" min="0" value="0"></label></div></div>
+step3=<div class="step"><small>3 из 5</small><h2>Где хотите пожить?</h2><p>Выберите один или несколько городов. Мы распределим ночи и сразу определимся с жильём.</p><div class="grid"><button type="button" class="choice" data-g="city" data-v="Калининград">Калининград</button><button type="button" class="choice sel" data-g="city" data-v="Зеленоградск">Зеленоградск</button><button type="button" class="choice sel" data-g="city" data-v="Светлогорск">Светлогорск</button><button type="button" class="choice" data-g="city" data-v="Пионерский">Пионерский</button><button type="button" class="choice" data-g="city" data-v="Янтарный">Янтарный</button><button type="button" class="choice" data-g="city" data-v="Балтийск">Балтийск</button><button type="button" class="choice" data-g="city" data-v="Гусев">Гусев</button></div><div class="ob-lodging-wrap"><b>Проживание</b><div class="ob-lodging-lead">Мы предложили даты автоматически. Проверьте их: они определяют, из какого города строится каждый день поездки.</div><div class="ob-lodging-list"><div class="ob-lodging-city"><div class="ob-lodging-head"><b>Зеленоградск</b><span>24 авг. — 26 авг.</span></div><div class="ob-lodging-dates"><label>Заезд<input type="date" data-stay-start="Зеленоградск" value="2026-08-24"></label><label>Выезд<input type="date" data-stay-end="Зеленоградск" value="2026-08-26"></label></div><div class="ob-lodging-mode"><button type="button" data-lmode="have" data-city="Зеленоградск" class="">Жильё уже есть</button><button type="button" data-lmode="find" data-city="Зеленоградск" class="">Найти жильё</button><button type="button" data-lmode="later" data-city="Зеленоградск" class="selected">Позже</button></div></div><div class="ob-lodging-city"><div class="ob-lodging-head"><b>Светлогорск</b><span>26 авг. — 28 авг.</span></div><div class="ob-lodging-dates"><label>Заезд<input type="date" data-stay-start="Светлогорск" value="2026-08-26"></label><label>Выезд<input type="date" data-stay-end="Светлогорск" value="2026-08-28"></label></div><div class="ob-lodging-mode"><button type="button" data-lmode="have" data-city="Светлогорск" class="">Жильё уже есть</button><button type="button" data-lmode="find" data-city="Светлогорск" class="">Найти жильё</button><button type="button" data-lmode="later" data-city="Светлогорск" class="selected">Позже</button></div></div></div><div class="ob-lodging-validation ok">✓ Периоды согласованы</div></div></div>
+globals=["oncontentvisibilityautostatechange","onpopstate","currentTripDates","eventsForTrip","lodgingDateAdd","lodgingFmt","lodgingSplit","ensureLodgingDates","lodgingMode","lodgingValidate","lodgingPreview","lodgingStepHtml","bindLodgingStep","tripDateObj","tripSeasonSummary","tripDateIso","longTripScarcity","editTrip"]
+storage={"guideLodgings":"{}","guideWebBetaVersion":"0.9.2-isolated-1"}
