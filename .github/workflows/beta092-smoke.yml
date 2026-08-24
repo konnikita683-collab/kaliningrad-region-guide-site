@@ -27,55 +27,29 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local site
         run: python3 -m http.server 8000 > /tmp/beta-http.log 2>&1 &
-      - name: Run real browser lodging-date smoke test
+      - name: Run browser smoke
         id: smoke
         continue-on-error: true
         run: |
           mkdir -p status
           node <<'NODE'
-          const fs = require('fs');
-          const { chromium } = require('playwright');
-          (async()=>{
-            let browser, page;
-            try {
-              browser = await chromium.launch({headless:true});
-              page = await browser.newPage({ viewport: { width: 412, height: 915 } });
-              const consoleLog=[];
-              page.on('console', msg => { const s=msg.type()+': '+msg.text(); consoleLog.push(s); console.log('BROWSER:',s); });
-              page.on('pageerror', err => { const s='pageerror: '+err.message; consoleLog.push(s); console.log('BROWSER:',s); });
-              await page.goto('http://127.0.0.1:8000/beta092/?ci=lodging-date-smoke', {waitUntil:'networkidle'});
-              await page.waitForTimeout(1500);
-              const hostCount=await page.locator('#betaOnboarding').count();
-              const hostVisible=hostCount?await page.locator('#betaOnboarding').isVisible():false;
-              const bodyText=(await page.locator('body').innerText()).slice(0,2000);
-              if(hostCount!==1||!hostVisible) throw new Error('onboarding host count='+hostCount+', visible='+hostVisible+'; body='+bodyText);
-              if(!bodyText.includes('BETA 0.9.2 ISO1')) throw new Error('ISO1 runtime marker not found; body='+bodyText);
-
-              await page.locator('#obStart').fill('2026-08-24');
-              await page.locator('#obEnd').fill('2026-08-28');
-              await page.locator('.ob-next').click();
-              await page.waitForSelector('#obAdults');
-              await page.locator('.ob-next').click();
-              await page.waitForSelector('.ob-choice[data-group="city"]');
-              const initialSelected=await page.locator('.ob-choice[data-group="city"].selected').count();
-              if(initialSelected!==0) throw new Error('Expected 0 preselected cities, got '+initialSelected);
-              await page.locator('.ob-choice[data-group="city"][data-value="Зеленоградск"]').click();
-              await page.waitForTimeout(300);
-              const selected=await page.locator('.ob-choice[data-group="city"].selected').count();
-              if(selected!==1) throw new Error('Expected exactly 1 selected city, got '+selected);
-              const stay=(await page.locator('.ob-lodging-head span').first().textContent()||'').trim();
-              const onboarding=await page.evaluate(()=>localStorage.getItem('guideOnboarding'));
-              const lodging=await page.evaluate(()=>localStorage.getItem('guideLodgingOnboarding'));
-              if(!/24\s*авг.*28\s*авг/i.test(stay)) throw new Error('Wrong single-city stay dates: '+stay+'; onboarding='+onboarding+'; lodging='+lodging);
-              await page.screenshot({path:'beta092-smoke.png',fullPage:true});
-              fs.writeFileSync('status/beta092-smoke.txt','status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\nstay='+stay+'\nonboarding='+onboarding+'\nlodging='+lodging+'\nconsole='+consoleLog.join(' | ')+'\n');
-            } catch(err) {
-              let diag='';
-              try { if(page){ diag='\nurl='+page.url()+'\nbody='+(await page.locator('body').innerText()).slice(0,2500); await page.screenshot({path:'beta092-smoke.png',fullPage:true}); } } catch(_){}
-              fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(err&&err.message||err)+diag+'\n');
-              console.error(err); process.exitCode=1;
-            } finally { if(browser) await browser.close(); }
-          })();
+          const fs=require('fs'); const {chromium}=require('playwright');
+          (async()=>{let browser,page,logs=[];try{
+            browser=await chromium.launch({headless:true}); page=await browser.newPage({viewport:{width:412,height:915}});
+            page.on('console',m=>logs.push(m.type()+':'+m.text())); page.on('pageerror',e=>logs.push('pageerror:'+e.message));
+            await page.goto('http://127.0.0.1:8000/beta092/?ci=smoke',{waitUntil:'networkidle'}); await page.waitForTimeout(1200);
+            const hostCount=await page.locator('#betaOnboarding').count(); const hostVisible=hostCount?await page.locator('#betaOnboarding').isVisible():false;
+            if(hostCount!==1||!hostVisible) throw new Error('onboarding host count='+hostCount+', visible='+hostVisible);
+            const body=await page.locator('body').innerText(); if(!body.includes('BETA 0.9.2 ISO1')) throw new Error('ISO1 marker missing');
+            await page.locator('#obStart').fill('2026-08-24'); await page.locator('#obEnd').fill('2026-08-28'); await page.locator('.ob-next').click();
+            await page.waitForSelector('#obAdults'); await page.locator('.ob-next').click(); await page.waitForSelector('.ob-choice[data-group="city"]');
+            const before=await page.locator('.ob-choice[data-group="city"].selected').count(); if(before!==0)throw new Error('preselected cities='+before);
+            await page.locator('.ob-choice[data-group="city"][data-value="Зеленоградск"]').click(); await page.waitForTimeout(300);
+            const selected=await page.locator('.ob-choice[data-group="city"].selected').count(); const stay=(await page.locator('.ob-lodging-head span').first().textContent()||'').trim();
+            const ob=await page.evaluate(()=>localStorage.getItem('guideOnboarding')); const lod=await page.evaluate(()=>localStorage.getItem('guideLodgingOnboarding'));
+            if(selected!==1)throw new Error('selected cities='+selected); if(!/24\s*авг.*28\s*авг/i.test(stay))throw new Error('wrong stay='+stay+' ob='+ob+' lod='+lod);
+            await page.screenshot({path:'beta092-smoke.png',fullPage:true}); fs.writeFileSync('status/beta092-smoke.txt','status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\nstay='+stay+'\nonboarding='+ob+'\nlodging='+lod+'\n');
+          }catch(err){let diag='';try{if(page){const d=await page.evaluate(()=>({body:(document.body.innerText||'').slice(0,1800),ids:Array.from(document.querySelectorAll('[id]')).map(e=>e.tagName+'#'+e.id+'.'+e.className).slice(0,80),newTrip:Array.from(document.querySelectorAll('section,div')).filter(e=>(e.textContent||'').includes('Новая поездка')).slice(0,8).map(e=>e.outerHTML.slice(0,1200)),scripts:Array.from(document.scripts).map(s=>s.src||s.getAttribute('data-guide')||'inline').slice(-30)}));diag='\nbody='+d.body+'\nids='+JSON.stringify(d.ids)+'\nnewTrip='+JSON.stringify(d.newTrip)+'\nscripts='+JSON.stringify(d.scripts)+'\nlogs='+JSON.stringify(logs);await page.screenshot({path:'beta092-smoke.png',fullPage:true});}}catch(_){} fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(err&&err.message||err)+diag+'\n');console.error(err);process.exitCode=1;}finally{if(browser)await browser.close();}})();
           NODE
       - name: Persist smoke result
         if: always()
@@ -85,13 +59,13 @@ jobs:
           git add status/beta092-smoke.txt
           git commit -m "Record Beta 0.9.2 browser smoke [skip ci]" || true
           git push
-      - name: Upload smoke screenshot
+      - name: Upload screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: beta092-smoke
           path: beta092-smoke.png
           if-no-files-found: ignore
-      - name: Fail workflow when smoke failed
+      - name: Fail when smoke failed
         if: steps.smoke.outcome == 'failure'
         run: exit 1
