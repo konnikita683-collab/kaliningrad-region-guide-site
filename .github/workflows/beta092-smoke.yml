@@ -34,15 +34,15 @@ jobs:
           const fs=require('fs'); const {chromium}=require('playwright');
           (async()=>{let b,p;try{
             b=await chromium.launch({headless:true});p=await b.newPage({viewport:{width:412,height:915}});
-            await p.goto('http://127.0.0.1:8000/beta092/?ci=ost4',{waitUntil:'networkidle'});await p.waitForSelector('#wizard');
-            const body=await p.locator('body').innerText();if(!body.includes('BETA 0.9.2 OST4')||body.includes('OST4 ERROR'))throw new Error('OST4 runtime patch not active');
+            await p.goto('http://127.0.0.1:8000/beta092/?ci=ost5',{waitUntil:'networkidle'});await p.waitForSelector('#wizard');
+            const body=await p.locator('body').innerText();if(!body.includes('BETA 0.9.2 OST5')||body.includes('OST5 ERROR'))throw new Error('OST5 runtime patch not active');
             await p.locator('#a').fill('2026-08-24');await p.locator('#b').fill('2026-08-28');await p.locator('#next').click();
             await p.waitForSelector('#ad');await p.locator('#next').click();await p.waitForSelector('button[data-g="city"]');
             const initial=await p.locator('button[data-g="city"].sel').count();if(initial!==0)throw new Error('Preselected cities='+initial);
             await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click();await p.waitForTimeout(200);
             const stay=(await p.locator('.ob-lodging-head span').first().textContent()||'').trim();if(!/24\s*авг.*28\s*авг/i.test(stay))throw new Error('Date regression: '+stay);
             await p.locator('button[data-lmode="find"][data-city="Зеленоградск"]').click();await p.waitForTimeout(150);
-            await p.evaluate(()=>{window.__ostCaptured='';window.open=function(u){window.__ostCaptured=String(u||'');return null;};});
+            await p.evaluate(()=>{window.__ostCaptured='';window.__guideNativeOpen=function(u){window.__ostCaptured=String(u||'');return null;};});
             await p.locator('button[data-provider="ostrovok"][data-city="Зеленоградск"]').click();await p.waitForTimeout(100);
             const opened=await p.evaluate(()=>window.__ostCaptured||'');
             const expected='https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes';
@@ -56,7 +56,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add status/beta092-smoke.txt
-          git commit -m "Record Beta 0.9.2 OST4 smoke [skip ci]" || true
+          git commit -m "Record Beta 0.9.2 OST5 smoke [skip ci]" || true
           git push
       - name: Fail when smoke failed
         if: steps.smoke.outcome == 'failure'
