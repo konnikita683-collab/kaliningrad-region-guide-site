@@ -16,14 +16,16 @@
 (async()=>{
   try{
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-4';
-    const parts=await Promise.all(files.map(async name=>{
+    const stamp='20260824-5';
+    const partsPromise=Promise.all(files.map(async name=>{
       const r=await fetch('./data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error(name);
       let text=await r.text();
       if(name.startsWith('p001-'))text=text.slice(text.indexOf('\n')+1);
       return text;
     }));
+    const hotfixPromise=fetch('./hotfix-0.9.js?v='+stamp,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('hotfix');return r.text();});
+    const [parts,hotfix]=await Promise.all([partsPromise,hotfixPromise]);
     const encoded=parts.join('').replace(/\s+/g,'');
     const binary=atob(encoded);
     const bytes=new Uint8Array(binary.length);
@@ -31,7 +33,11 @@
     if(!('DecompressionStream' in window))throw new Error('browser');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     const html=await new Response(stream).text();
-    const patched=html.replace('</body>','<script src="./hotfix-0.9.js?v='+stamp+'"><\/script></body>');
+    const close='<'+'/script>';
+    const safeHotfix=hotfix.replace(/<\/script/gi,'<\\/script');
+    const injection='<script>'+safeHotfix+close;
+    const bodyClose=/<\/body>/i;
+    const patched=bodyClose.test(html)?html.replace(bodyClose,injection+'</body>'):html+injection;
     document.open();
     document.write(patched);
     document.close();
