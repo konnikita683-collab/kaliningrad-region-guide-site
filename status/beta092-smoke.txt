@@ -1,0 +1,6 @@
+status=FAIL
+source_sha=bae255a785def85a3fe13a06e3cd168b5224f91d
+error=page.waitForSelector: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator('#betaOnboarding') to be visible
+
