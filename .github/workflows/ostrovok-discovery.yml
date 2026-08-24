@@ -1,0 +1,55 @@
+name: Ostrovok URL discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/ostrovok-discovery.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Inspect live Ostrovok page
+        run: |
+          mkdir -p status
+          node <<'NODE'
+          const fs=require('fs'); const {chromium}=require('playwright');
+          (async()=>{let b,p;try{
+            b=await chromium.launch({headless:true});
+            p=await b.newPage({viewport:{width:412,height:915},locale:'ru-RU'});
+            const req=[]; p.on('request',r=>{const u=r.url();if(/ostrovok|worldota|region|search/i.test(u))req.push(u)});
+            await p.goto('https://ostrovok.ru/hotel/russia/zelenogradsk/',{waitUntil:'domcontentloaded',timeout:60000});
+            await p.waitForTimeout(5000);
+            const html=await p.content();
+            function collect(re){const a=[];let m;while((m=re.exec(html))&&a.length<80)a.push(m[0]);return a}
+            const matches={
+              region_id:collect(/.{0,80}(?:region_id|regionId|region-id).{0,100}/gi),
+              qnum:collect(/.{0,80}[?&]q=\d+.{0,100}/gi),
+              zelen:collect(/.{0,120}zelenogradsk.{0,160}/gi).slice(0,30)
+            };
+            const globals=await p.evaluate(()=>Object.keys(window).filter(k=>/region|search|initial|redux|state|page/i.test(k)).slice(0,200));
+            const scriptSnips=await p.evaluate(()=>Array.from(document.scripts).map(s=>s.textContent||'').filter(t=>/zelenogradsk|region_id|regionId/i.test(t)).slice(0,20).map(t=>t.slice(0,8000)));
+            fs.writeFileSync('status/ostrovok-discovery.txt','status=OK\nurl='+p.url()+'\nregion='+JSON.stringify(matches.region_id)+'\nqnum='+JSON.stringify(matches.qnum)+'\nzelen='+JSON.stringify(matches.zelen)+'\nglobals='+JSON.stringify(globals)+'\nscripts='+JSON.stringify(scriptSnips)+'\nrequests='+JSON.stringify(req.slice(-100))+'\n');
+          }catch(e){fs.writeFileSync('status/ostrovok-discovery.txt','status=FAIL\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+          NODE
+      - name: Persist result
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status/ostrovok-discovery.txt
+          git commit -m "Record Ostrovok URL discovery [skip ci]" || true
+          git push
