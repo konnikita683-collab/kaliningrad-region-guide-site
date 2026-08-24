@@ -5,19 +5,21 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-<title>Гайд по Калининградской области — Beta 0.9.2 FIX4</title>
+<title>Гайд по Калининградской области — Beta 0.9.2 FIX5</title>
 <style>:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}.err{max-width:620px;line-height:1.5}</style>
 </head>
 <body>
-<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка FIX4…</div></div>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка FIX5…</div></div>
 <script>
 (async()=>{
   try{
-    const version='0.9.2-webfix-4';
-    ['guideOnboarding','guideGuestAges','guideLodgingOnboarding','guideLodgings','guideBetaStateSchema'].forEach(k=>localStorage.removeItem(k));
-    localStorage.setItem('guideWebBetaVersion',version);
+    const version='0.9.2-webfix-5';
+    if(localStorage.getItem('guideWebBetaVersion')!==version){
+      ['guideOnboarding','guideGuestAges','guideLodgingOnboarding','guideLodgings','guideBetaStateSchema'].forEach(k=>localStorage.removeItem(k));
+      localStorage.setItem('guideWebBetaVersion',version);
+    }
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-beta092-webfix-4';
+    const stamp='20260824-beta092-webfix-5';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('../beta/data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error('data:'+name);
@@ -29,28 +31,29 @@
     const binary=atob(encoded);
     const bytes=new Uint8Array(binary.length);
     for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    if(!('DecompressionStream' in window))throw new Error('browser');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     let html=await new Response(stream).text();
+    const scriptClose='<'+'/script>';
     function stripModule(name){
       const marker='<script data-guide="'+name+'">';
       const start=html.indexOf(marker);
       if(start<0)throw new Error('module not found: '+name);
-      const end=html.indexOf('</script>',start);
+      const end=html.indexOf(scriptClose,start);
       if(end<0)throw new Error('module end not found: '+name);
-      html=html.slice(0,start)+html.slice(end+9);
+      html=html.slice(0,start)+html.slice(end+scriptClose.length);
     }
     stripModule('onboarding-beta-ui.js');
     stripModule('housing-onboarding.js');
     stripModule('beta-runtime.js');
-    const close='<'+'/script>';
-    html=html.replace(/<\/body>/i,
-      '<script src="../beta091/modules/onboarding-beta-ui.js?v='+stamp+'">'+close+
-      '<script src="../beta091/modules/housing-onboarding.js?v='+stamp+'">'+close+
-      '<script>(function(){var e=document.createElement("div");e.textContent="FIX4";e.style.cssText="position:fixed;right:10px;bottom:10px;z-index:100000;padding:6px 9px;border-radius:999px;background:#8b1e1e;color:#fff;font:800 11px/1 system-ui;pointer-events:none";document.body.appendChild(e);})();'+close+
-      '</body>');
+    const injected=
+      '<script src="../beta091/modules/onboarding-beta-ui.js?v='+stamp+'">'+scriptClose+
+      '<script src="../beta091/modules/housing-onboarding.js?v='+stamp+'">'+scriptClose+
+      '<script>(function(){var e=document.createElement("div");e.textContent="FIX5";e.style.cssText="position:fixed;right:10px;bottom:10px;z-index:100000;padding:6px 9px;border-radius:999px;background:#8b1e1e;color:#fff;font:800 11px/1 system-ui;pointer-events:none";document.body.appendChild(e);})();'+scriptClose;
+    html=html.replace(/<\/body>/i,injected+'</body>');
     document.open();document.write(html);document.close();
   }catch(e){
-    document.body.innerHTML='<div class="load err"><b>FIX4 не загрузился</b><div class="muted">'+String(e&&e.message||e)+'</div></div>';
+    document.body.innerHTML='<div class="load err"><b>FIX5 не загрузился</b><div class="muted">'+String(e&&e.message||e)+'</div></div>';
   }
 })();
 </script>
