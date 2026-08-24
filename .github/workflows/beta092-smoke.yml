@@ -25,7 +25,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local site
         run: python3 -m http.server 8000 > /tmp/beta-http.log 2>&1 &
-      - name: Inspect actual wizard
+      - name: Test real public wizard
         id: smoke
         continue-on-error: true
         run: |
@@ -34,24 +34,20 @@ jobs:
           const fs=require('fs'); const {chromium}=require('playwright');
           (async()=>{let b,p;try{
             b=await chromium.launch({headless:true}); p=await b.newPage({viewport:{width:412,height:915}});
-            await p.goto('http://127.0.0.1:8000/beta092/?ci=legacy2',{waitUntil:'networkidle'}); await p.waitForSelector('#wizard');
-            await p.locator('#a').fill('2026-08-24'); await p.locator('#b').fill('2026-08-28'); await p.locator('#next').click(); await p.waitForTimeout(100);
-            await p.locator('#next').click(); await p.waitForTimeout(150);
-            const before=await p.locator('#step').innerHTML();
-            const fn=await p.evaluate(()=>({
-              currentTripDates: String(window.currentTripDates),
-              lodgingSplit: String(window.lodgingSplit),
-              ensureLodgingDates: String(window.ensureLodgingDates),
-              lodgingStepHtml: String(window.lodgingStepHtml),
-              bindLodgingStep: String(window.bindLodgingStep),
-              globals:Object.keys(window).filter(k=>/render|step|pref|selected|city|cities|lodg|state/i.test(k)).slice(0,160)
-            }));
-            const svet=p.locator('button[data-g="city"][data-v="Светлогорск"]'); await svet.click(); await p.waitForTimeout(250);
-            const after=await p.locator('#step').innerHTML();
-            const selected=await p.locator('button[data-g="city"].sel').allTextContents();
-            const storage=await p.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)])));
-            fs.writeFileSync('status/beta092-smoke.txt','status=DIAG2\nsource_sha='+process.env.GITHUB_SHA+'\nbefore='+before.replace(/\n/g,' ')+'\nafter='+after.replace(/\n/g,' ')+'\nselected='+JSON.stringify(selected)+'\nfunctions='+JSON.stringify(fn)+'\nstorage='+JSON.stringify(storage)+'\n');
-          }catch(e){fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+            await p.goto('http://127.0.0.1:8000/beta092/?ci=date2',{waitUntil:'networkidle'}); await p.waitForSelector('#wizard');
+            const body=await p.locator('body').innerText(); if(!body.includes('BETA 0.9.2 DATE2')||body.includes('DATE2 ERROR'))throw new Error('DATE2 runtime patch not active');
+            await p.locator('#a').fill('2026-08-24'); await p.locator('#b').fill('2026-08-28'); await p.locator('#next').click();
+            await p.waitForSelector('#ad'); await p.locator('#next').click(); await p.waitForSelector('button[data-g="city"]'); await p.waitForTimeout(150);
+            let selected=await p.locator('button[data-g="city"].sel').count(); if(selected!==0)throw new Error('Expected 0 preselected cities, got '+selected);
+            const zel=p.locator('button[data-g="city"][data-v="Зеленоградск"]'); const svet=p.locator('button[data-g="city"][data-v="Светлогорск"]');
+            await zel.click(); await p.waitForTimeout(200); selected=await p.locator('button[data-g="city"].sel').count(); if(selected!==1)throw new Error('After Зеленоградск expected 1 city, got '+selected);
+            let stays=await p.locator('.ob-lodging-head span').allTextContents(); if(stays.length!==1||!/24\s*авг.*28\s*авг/i.test(stays[0]))throw new Error('Single-city stay wrong: '+JSON.stringify(stays));
+            await svet.click(); await p.waitForTimeout(200); selected=await p.locator('button[data-g="city"].sel').count(); if(selected!==2)throw new Error('After adding Светлогорск expected 2 cities, got '+selected);
+            stays=await p.locator('.ob-lodging-head span').allTextContents(); if(stays.length!==2||!/24\s*авг.*26\s*авг/i.test(stays[0])||!/26\s*авг.*28\s*авг/i.test(stays[1]))throw new Error('Two-city split wrong: '+JSON.stringify(stays));
+            await svet.click(); await p.waitForTimeout(200); selected=await p.locator('button[data-g="city"].sel').count(); if(selected!==1)throw new Error('After removing Светлогорск expected 1 city, got '+selected);
+            stays=await p.locator('.ob-lodging-head span').allTextContents(); if(stays.length!==1||!/24\s*авг.*28\s*авг/i.test(stays[0]))throw new Error('Recalculation after removal wrong: '+JSON.stringify(stays));
+            await p.screenshot({path:'beta092-smoke.png',fullPage:true}); fs.writeFileSync('status/beta092-smoke.txt','status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\ninitial_cities=0\nsingle_city='+stays[0]+'\nrecalc=PASS\n');
+          }catch(e){let diag='';try{diag='\nbody='+(await p.locator('body').innerText()).slice(0,1800)+'\nstep='+(await p.locator('#step').innerHTML()).replace(/\n/g,' ').slice(0,5000);await p.screenshot({path:'beta092-smoke.png',fullPage:true});}catch(_){}fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+diag+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
           NODE
       - name: Persist result
         if: always()
@@ -59,5 +55,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add status/beta092-smoke.txt
-          git commit -m "Record Beta 0.9.2 wizard diagnostic [skip ci]" || true
+          git commit -m "Record Beta 0.9.2 DATE2 smoke [skip ci]" || true
           git push
+      - name: Upload screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: beta092-date2-smoke
+          path: beta092-smoke.png
+          if-no-files-found: ignore
+      - name: Fail when smoke failed
+        if: steps.smoke.outcome == 'failure'
+        run: exit 1
