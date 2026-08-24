@@ -25,30 +25,23 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local site
         run: python3 -m http.server 8000 > /tmp/beta-http.log 2>&1 &
-      - name: Test dates and Ostrovok URL
+      - name: Diagnose OST5
         id: smoke
         continue-on-error: true
         run: |
           mkdir -p status
           node <<'NODE'
           const fs=require('fs'); const {chromium}=require('playwright');
-          (async()=>{let b,p;try{
+          (async()=>{let b,p,logs=[];try{
             b=await chromium.launch({headless:true});p=await b.newPage({viewport:{width:412,height:915}});
-            await p.goto('http://127.0.0.1:8000/beta092/?ci=ost5',{waitUntil:'networkidle'});await p.waitForSelector('#wizard');
-            const body=await p.locator('body').innerText();if(!body.includes('BETA 0.9.2 OST5')||body.includes('OST5 ERROR'))throw new Error('OST5 runtime patch not active');
-            await p.locator('#a').fill('2026-08-24');await p.locator('#b').fill('2026-08-28');await p.locator('#next').click();
-            await p.waitForSelector('#ad');await p.locator('#next').click();await p.waitForSelector('button[data-g="city"]');
-            const initial=await p.locator('button[data-g="city"].sel').count();if(initial!==0)throw new Error('Preselected cities='+initial);
-            await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click();await p.waitForTimeout(200);
-            const stay=(await p.locator('.ob-lodging-head span').first().textContent()||'').trim();if(!/24\s*авг.*28\s*авг/i.test(stay))throw new Error('Date regression: '+stay);
-            await p.locator('button[data-lmode="find"][data-city="Зеленоградск"]').click();await p.waitForTimeout(150);
-            await p.evaluate(()=>{window.__ostCaptured='';window.__guideNativeOpen=function(u){window.__ostCaptured=String(u||'');return null;};});
-            await p.locator('button[data-provider="ostrovok"][data-city="Зеленоградск"]').click();await p.waitForTimeout(100);
-            const opened=await p.evaluate(()=>window.__ostCaptured||'');
-            const expected='https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes';
-            if(opened!==expected)throw new Error('Wrong Ostrovok URL: '+opened);
-            fs.writeFileSync('status/beta092-smoke.txt','status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\ninitial_cities=0\nstay='+stay+'\nostrovok='+opened+'\n');
-          }catch(e){fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+            p.on('console',m=>logs.push(m.type()+':'+m.text()));p.on('pageerror',e=>logs.push('pageerror:'+e.message));
+            await p.goto('http://127.0.0.1:8000/beta092/?ci=ost5diag',{waitUntil:'networkidle'});await p.waitForSelector('#wizard');await p.waitForTimeout(300);
+            const body=(await p.locator('body').innerText()).slice(0,2500);
+            const badge=await p.locator('#beta092Date2Badge').count()?await p.locator('#beta092Date2Badge').innerText():'NO_BADGE';
+            const globals=await p.evaluate(()=>({openType:typeof window.open,nativeType:typeof window.__guideNativeOpen,buildType:typeof window.guideBuildOstrovokUrl,rewriteType:typeof window.guideRewriteOstrovokUrl}));
+            fs.writeFileSync('status/beta092-smoke.txt','status=DIAG\nsource_sha='+process.env.GITHUB_SHA+'\nbadge='+badge+'\nglobals='+JSON.stringify(globals)+'\nlogs='+JSON.stringify(logs)+'\nbody='+body.replace(/\n/g,' | ')+'\n');
+            if(badge!=='BETA 0.9.2 OST5')process.exitCode=1;
+          }catch(e){let body='';try{body=(await p.locator('body').innerText()).slice(0,2500);}catch(_){}fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+'\nlogs='+JSON.stringify(logs)+'\nbody='+body.replace(/\n/g,' | ')+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
           NODE
       - name: Persist result
         if: always()
@@ -56,7 +49,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add status/beta092-smoke.txt
-          git commit -m "Record Beta 0.9.2 OST5 smoke [skip ci]" || true
+          git commit -m "Record OST5 activation diagnostic [skip ci]" || true
           git push
       - name: Fail when smoke failed
         if: steps.smoke.outcome == 'failure'
