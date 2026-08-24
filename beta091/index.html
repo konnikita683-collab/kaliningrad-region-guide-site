@@ -22,7 +22,7 @@
       localStorage.setItem(versionKey,version);
     }
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-beta091-ostrovok-o1';
+    const stamp='20260824-beta091-ostrovok-o2';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('../beta/data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error('data:'+name);
@@ -44,7 +44,7 @@
       html=html.replace(re,'');
     }
     const close='<'+'/script>';
-    const ostrovokGuard='<script>(function(){var routes={"Калининград":"kaliningrad","Зеленоградск":"zelenogradsk","Светлогорск":"svetlogorsk","Пионерский":"pionerskiy","Янтарный":"yantarny","Балтийск":"baltiysk","Гусев":"gusev"};document.addEventListener("click",function(e){var b=e.target&&e.target.closest&&e.target.closest("[data-provider=\\"ostrovok\\"][data-city]");if(!b)return;e.preventDefault();e.stopImmediatePropagation();var slug=routes[b.dataset.city]||"kaliningrad";location.href="https://ostrovok.ru/hotel/russia/"+encodeURIComponent(slug)+"/";},true);function mark(){if(document.getElementById("ostrovokO1Badge"))return;var el=document.createElement("div");el.id="ostrovokO1Badge";el.textContent="OSTROVOK O1";el.style.cssText="position:fixed;right:10px;top:10px;z-index:100000;padding:5px 8px;border-radius:999px;background:#263633;color:#fff;font:800 10px/1 system-ui;pointer-events:none";document.body.appendChild(el);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mark,{once:true});else mark();})();'+close;
+    const ostrovokGuard='<script>(function(){var routes={"Калининград":"kaliningrad","Зеленоградск":"zelenogradsk","Светлогорск":"svetlogorsk","Пионерский":"pionerskiy","Янтарный":"yantarny","Балтийск":"baltiysk","Гусев":"gusev"};function dot(v){var m=String(v||"").match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+"."+m[2]+"."+m[1]:"";}function stay(city){try{var x=JSON.parse(localStorage.getItem("guideLodgingOnboarding")||"{\\"cities\\":{}}"),c=x.cities&&x.cities[city]||{};return{start:c.start||"",end:c.end||""};}catch(_){return{start:"",end:""};}}document.addEventListener("click",function(e){var b=e.target&&e.target.closest&&e.target.closest("[data-provider=\\"ostrovok\\"][data-city]");if(!b)return;e.preventDefault();e.stopImmediatePropagation();var city=b.dataset.city,slug=routes[city]||"kaliningrad",u="https://ostrovok.ru/hotel/russia/"+encodeURIComponent(slug)+"/",s=stay(city),a=dot(s.start),z=dot(s.end);if(a&&z)u+="?dates="+encodeURIComponent(a+"-"+z);location.href=u;},true);function mark(){if(document.getElementById("ostrovokO2Badge"))return;var el=document.createElement("div");el.id="ostrovokO2Badge";el.textContent="OSTROVOK O2";el.style.cssText="position:fixed;right:10px;top:10px;z-index:100000;padding:5px 8px;border-radius:999px;background:#263633;color:#fff;font:800 10px/1 system-ui;pointer-events:none";document.body.appendChild(el);}if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",mark,{once:true});else mark();})();'+close;
     html=html.replace(/<body([^>]*)>/i,function(m){return m+ostrovokGuard;});
     const injection=[
       '<script src="./modules/commerce-core.js?v='+stamp+'">'+close,
