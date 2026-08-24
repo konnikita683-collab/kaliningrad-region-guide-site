@@ -1,25 +1,6 @@
 status=FAIL
-source_sha=2981ca3aa0b42db4c7d4441e422c1b0a559cf74f
-error=onboarding host count=0, visible=false; body=ГАЙД ПО КАЛИНИНГРАДСКОЙ ОБЛАСТИ
-Соберём вашу поездку за несколько шагов
-Настройка
-По дням
-Автомобиль
-События
-Новая поездка
-Когда едете?
-Ответьте на несколько коротких вопросов — остальное можно изменить позже.
-1 из 5
-Когда едете?
-
-Даты можно изменить в любой момент.
-
-Начало
-Конец
-Далее
-BETA 0.9
-BETA MODULE ERROR
-url=http://127.0.0.1:8000/beta092/?ci=lodging-date-smoke
+source_sha=879fce5dda0a024799688a7a328939dbb3c3d3ad
+error=onboarding host count=0, visible=false
 body=ГАЙД ПО КАЛИНИНГРАДСКОЙ ОБЛАСТИ
 Соберём вашу поездку за несколько шагов
 Настройка
@@ -39,3 +20,7 @@ body=ГАЙД ПО КАЛИНИНГРАДСКОЙ ОБЛАСТИ
 Далее
 BETA 0.9
 BETA MODULE ERROR
+ids=["STYLE#housing-onboarding-style.","SECTION#setup.view active","DIV#wizard.card","DIV#progress.progress","DIV#step.","INPUT#a.","INPUT#b.","BUTTON#back.back","BUTTON#next.next","DIV#tripSummary.hidden","DIV#summary.summary","SECTION#days.view","DIV#daysList.empty","SECTION#car.view","DIV#carInfo.","SECTION#events.view","DIV#eventList.","SCRIPT#external-beta-09.","DIV#beta09Badge."]
+newTrip=["<section id=\"setup\" class=\"view active\">\n  <div id=\"wizard\" class=\"card\">\n    <span class=\"kicker\">Новая поездка</span>\n    <h2 style=\"margin:5px 0 4px\">Когда едете?</h2>\n    <div style=\"color:var(--muted)\">Ответьте на несколько коротких вопросов — остальное можно изменить позже.</div>\n    <div class=\"progress\" id=\"progress\"><i class=\"on\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i></div>\n    <div id=\"step\"><div class=\"step\"><small>1 из 5</small><h2>Когда едете?</h2><p>Даты можно изменить в любой момент.</p><div class=\"grid\"><label>Начало<input id=\"a\" type=\"date\" value=\"2026-08-24\"></label><label>Конец<input id=\"b\" type=\"date\" value=\"2026-08-28\"></label></div></div></div>\n    <div class=\"nav\"><button class=\"back\" id=\"back\" style=\"visibility: hidden;\">Назад</button><button class=\"next\" id=\"next\">Далее</button></div>\n  </div>\n  <div id=\"tripSummary\" class=\"hidden\">\n    <div class=\"summary\" id=\"summary\"></div>\n    <div class=\"card\"><b>Поездка готова</b><p style=\"color:var(--muted);margin-bottom:12px\">Откройте вкладку «По дням». Любой день можно заменить целиком.</p><button type=\"button\" class=\"edit-trip-btn\" onclick=\"editTrip()\">Изменить параметры поездки</butt","<div id=\"wizard\" class=\"card\">\n    <span class=\"kicker\">Новая поездка</span>\n    <h2 style=\"margin:5px 0 4px\">Когда едете?</h2>\n    <div style=\"color:var(--muted)\">Ответьте на несколько коротких вопросов — остальное можно изменить позже.</div>\n    <div class=\"progress\" id=\"progress\"><i class=\"on\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i><i class=\"\"></i></div>\n    <div id=\"step\"><div class=\"step\"><small>1 из 5</small><h2>Когда едете?</h2><p>Даты можно изменить в любой момент.</p><div class=\"grid\"><label>Начало<input id=\"a\" type=\"date\" value=\"2026-08-24\"></label><label>Конец<input id=\"b\" type=\"date\" value=\"2026-08-28\"></label></div></div></div>\n    <div class=\"nav\"><button class=\"back\" id=\"back\" style=\"visibility: hidden;\">Назад</button><button class=\"next\" id=\"next\">Далее</button></div>\n  </div>"]
+scripts=["inline","inline","inline","inline","http://127.0.0.1:8000/beta091/modules/onboarding-beta-ui.js?v=20260824-beta092-isolated-1","http://127.0.0.1:8000/beta091/modules/housing-onboarding.js?v=20260824-beta092-isolated-1","inline"]
+logs=[]
