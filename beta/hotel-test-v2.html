@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<title>Гайд по Калининградской области — HOTEL FIX 2</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}.err{max-width:560px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Чистый тест жилья · HOTEL FIX 2…</div></div>
+<script>
+(async()=>{
+  try{
+    const resetKey='housingSmoke20260824v3';
+    if(!sessionStorage.getItem(resetKey)){
+      ['guideOnboarding','guideGuestAges','guideLodgingOnboarding','guideLodgings'].forEach(k=>localStorage.removeItem(k));
+      sessionStorage.setItem(resetKey,'1');
+    }
+    const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
+    const stamp='20260824-hoteltest-v2-1';
+    const partsPromise=Promise.all(files.map(async name=>{
+      const r=await fetch('./data/'+name+'?v='+stamp,{cache:'no-store'});
+      if(!r.ok)throw new Error(name);
+      let text=await r.text();
+      if(name.startsWith('p001-'))text=text.slice(text.indexOf('\n')+1);
+      return text;
+    }));
+    const hotfixPromise=fetch('./hotfix-0.9.js?v='+stamp,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('hotfix');return r.text();});
+    const [parts,hotfix]=await Promise.all([partsPromise,hotfixPromise]);
+    const encoded=parts.join('').replace(/\s+/g,'');
+    const binary=atob(encoded);
+    const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    if(!('DecompressionStream' in window))throw new Error('browser');
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const html=await new Response(stream).text();
+    const close='<'+'/script>';
+    const safeHotfix=hotfix.replace(/<\/script/gi,'<\\/script');
+    const injection='<script>window.__GUIDE_HOTEL_TEST=true;'+close+'<script>'+safeHotfix+close;
+    const bodyClose=/<\/body>/i;
+    const patched=bodyClose.test(html)?html.replace(bodyClose,injection+'</body>'):html+injection;
+    document.open();
+    document.write(patched);
+    document.close();
+  }catch(e){
+    document.body.innerHTML='<div class="load err"><b>Не удалось открыть тестовую версию</b><div class="muted">Ошибка загрузки HOTEL FIX 2: '+String(e&&e.message||e)+'</div></div>';
+  }
+})();
+</script>
+</body>
+</html>
