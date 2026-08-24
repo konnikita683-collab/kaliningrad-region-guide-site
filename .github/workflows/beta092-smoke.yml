@@ -34,14 +34,23 @@ jobs:
           const fs=require('fs'); const {chromium}=require('playwright');
           (async()=>{let b,p;try{
             b=await chromium.launch({headless:true}); p=await b.newPage({viewport:{width:412,height:915}});
-            await p.goto('http://127.0.0.1:8000/beta092/?ci=legacy',{waitUntil:'networkidle'}); await p.waitForSelector('#wizard');
+            await p.goto('http://127.0.0.1:8000/beta092/?ci=legacy2',{waitUntil:'networkidle'}); await p.waitForSelector('#wizard');
             await p.locator('#a').fill('2026-08-24'); await p.locator('#b').fill('2026-08-28'); await p.locator('#next').click(); await p.waitForTimeout(100);
-            const step2=await p.locator('#step').innerHTML();
-            await p.locator('#next').click(); await p.waitForTimeout(100);
-            const step3=await p.locator('#step').innerHTML();
-            const globals=await p.evaluate(()=>Object.keys(window).filter(k=>/trip|state|city|cities|stay|lodg/i.test(k)).slice(0,120));
+            await p.locator('#next').click(); await p.waitForTimeout(150);
+            const before=await p.locator('#step').innerHTML();
+            const fn=await p.evaluate(()=>({
+              currentTripDates: String(window.currentTripDates),
+              lodgingSplit: String(window.lodgingSplit),
+              ensureLodgingDates: String(window.ensureLodgingDates),
+              lodgingStepHtml: String(window.lodgingStepHtml),
+              bindLodgingStep: String(window.bindLodgingStep),
+              globals:Object.keys(window).filter(k=>/render|step|pref|selected|city|cities|lodg|state/i.test(k)).slice(0,160)
+            }));
+            const svet=p.locator('button[data-g="city"][data-v="Светлогорск"]'); await svet.click(); await p.waitForTimeout(250);
+            const after=await p.locator('#step').innerHTML();
+            const selected=await p.locator('button[data-g="city"].sel').allTextContents();
             const storage=await p.evaluate(()=>Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)])));
-            fs.writeFileSync('status/beta092-smoke.txt','status=DIAG\nsource_sha='+process.env.GITHUB_SHA+'\nstep2='+step2.replace(/\n/g,' ')+'\nstep3='+step3.replace(/\n/g,' ')+'\nglobals='+JSON.stringify(globals)+'\nstorage='+JSON.stringify(storage)+'\n');
+            fs.writeFileSync('status/beta092-smoke.txt','status=DIAG2\nsource_sha='+process.env.GITHUB_SHA+'\nbefore='+before.replace(/\n/g,' ')+'\nafter='+after.replace(/\n/g,' ')+'\nselected='+JSON.stringify(selected)+'\nfunctions='+JSON.stringify(fn)+'\nstorage='+JSON.stringify(storage)+'\n');
           }catch(e){fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
           NODE
       - name: Persist result
