@@ -11,7 +11,7 @@ on:
       - ".github/workflows/beta092-smoke.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   smoke:
@@ -30,45 +30,66 @@ jobs:
           python3 -m http.server 8000 > /tmp/beta-http.log 2>&1 &
           echo $! > /tmp/beta-http.pid
       - name: Run real browser lodging-date smoke test
+        id: smoke
+        continue-on-error: true
         run: |
+          mkdir -p status
           node <<'NODE'
+          const fs = require('fs');
           const { chromium } = require('playwright');
           (async()=>{
-            const browser = await chromium.launch({headless:true});
-            const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
-            page.on('console', msg => console.log('BROWSER:', msg.type(), msg.text()));
-            await page.goto('http://127.0.0.1:8000/beta092/?ci=lodging-date-smoke', {waitUntil:'networkidle'});
-            await page.waitForSelector('#betaOnboarding', {timeout:15000});
-            const badge = await page.locator('body').textContent();
-            if(!badge.includes('BETA 0.9.2 ISO1')) throw new Error('ISO1 runtime marker not found');
+            let browser;
+            try {
+              browser = await chromium.launch({headless:true});
+              const page = await browser.newPage({ viewport: { width: 412, height: 915 } });
+              page.on('console', msg => console.log('BROWSER:', msg.type(), msg.text()));
+              await page.goto('http://127.0.0.1:8000/beta092/?ci=lodging-date-smoke', {waitUntil:'networkidle'});
+              await page.waitForSelector('#betaOnboarding', {timeout:15000});
+              const body = await page.locator('body').textContent();
+              if(!body.includes('BETA 0.9.2 ISO1')) throw new Error('ISO1 runtime marker not found');
 
-            await page.locator('#obStart').fill('2026-08-24');
-            await page.locator('#obEnd').fill('2026-08-28');
-            await page.locator('.ob-next').click();
-            await page.waitForSelector('#obAdults');
-            await page.locator('.ob-next').click();
-            await page.waitForSelector('.ob-choice[data-group="city"]');
+              await page.locator('#obStart').fill('2026-08-24');
+              await page.locator('#obEnd').fill('2026-08-28');
+              await page.locator('.ob-next').click();
+              await page.waitForSelector('#obAdults');
+              await page.locator('.ob-next').click();
+              await page.waitForSelector('.ob-choice[data-group="city"]');
 
-            const initialSelected = await page.locator('.ob-choice[data-group="city"].selected').count();
-            if(initialSelected !== 0) throw new Error('Expected 0 preselected cities, got '+initialSelected);
+              const initialSelected = await page.locator('.ob-choice[data-group="city"].selected').count();
+              if(initialSelected !== 0) throw new Error('Expected 0 preselected cities, got '+initialSelected);
 
-            await page.locator('.ob-choice[data-group="city"][data-value="Зеленоградск"]').click();
-            await page.waitForTimeout(250);
-            const selected = await page.locator('.ob-choice[data-group="city"].selected').count();
-            if(selected !== 1) throw new Error('Expected exactly 1 selected city, got '+selected);
+              await page.locator('.ob-choice[data-group="city"][data-value="Зеленоградск"]').click();
+              await page.waitForTimeout(300);
+              const selected = await page.locator('.ob-choice[data-group="city"].selected').count();
+              if(selected !== 1) throw new Error('Expected exactly 1 selected city, got '+selected);
 
-            const stay = (await page.locator('.ob-lodging-head span').first().textContent() || '').trim();
-            const onboarding = await page.evaluate(()=>localStorage.getItem('guideOnboarding'));
-            const lodging = await page.evaluate(()=>localStorage.getItem('guideLodgingOnboarding'));
-            console.log('STAY_TEXT=', stay);
-            console.log('GUIDE_ONBOARDING=', onboarding);
-            console.log('GUIDE_LODGING=', lodging);
-            if(!/24\s*авг.*28\s*авг/i.test(stay)) throw new Error('Wrong single-city stay dates: '+stay);
+              const stay = (await page.locator('.ob-lodging-head span').first().textContent() || '').trim();
+              const onboarding = await page.evaluate(()=>localStorage.getItem('guideOnboarding'));
+              const lodging = await page.evaluate(()=>localStorage.getItem('guideLodgingOnboarding'));
+              console.log('STAY_TEXT=', stay);
+              console.log('GUIDE_ONBOARDING=', onboarding);
+              console.log('GUIDE_LODGING=', lodging);
+              if(!/24\s*авг.*28\s*авг/i.test(stay)) throw new Error('Wrong single-city stay dates: '+stay);
 
-            await page.screenshot({path:'beta092-smoke.png', fullPage:true});
-            await browser.close();
-          })().catch(err=>{console.error(err);process.exit(1)});
+              await page.screenshot({path:'beta092-smoke.png', fullPage:true});
+              fs.writeFileSync('status/beta092-smoke.txt', 'status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\nstay='+stay+'\nonboarding='+onboarding+'\nlodging='+lodging+'\n');
+            } catch (err) {
+              fs.writeFileSync('status/beta092-smoke.txt', 'status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(err && err.message || err)+'\n');
+              console.error(err);
+              process.exitCode = 1;
+            } finally {
+              if(browser) await browser.close();
+            }
+          })();
           NODE
+      - name: Persist smoke result
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status/beta092-smoke.txt
+          git commit -m "Record Beta 0.9.2 browser smoke [skip ci]" || true
+          git push
       - name: Upload smoke screenshot
         if: always()
         uses: actions/upload-artifact@v4
@@ -76,3 +97,6 @@ jobs:
           name: beta092-smoke
           path: beta092-smoke.png
           if-no-files-found: ignore
+      - name: Fail workflow when smoke failed
+        if: steps.smoke.outcome == 'failure'
+        run: exit 1
