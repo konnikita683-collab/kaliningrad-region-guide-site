@@ -1,0 +1,59 @@
+name: Yandex Travel URL discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/yandex-travel-discovery.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify dated family URL
+        run: |
+          mkdir -p status
+          node <<'NODE'
+          const fs=require('fs'); const {chromium}=require('playwright');
+          (async()=>{let b,p;try{
+            b=await chromium.launch({headless:true});
+            p=await b.newPage({viewport:{width:412,height:915},locale:'ru-RU'});
+            const target='https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa';
+            const resp=await p.goto(target,{waitUntil:'domcontentloaded',timeout:60000});
+            await p.waitForTimeout(7000);
+            const body=(await p.locator('body').innerText()).slice(0,7000);
+            const title=await p.title(); const url=p.url();
+            const isBad=/ошибка\s*404|страница не найдена/i.test(body+' '+title);
+            const hasDates=/24\s*(?:авг|августа).{0,100}28\s*(?:авг|августа)/is.test(body) || (/24\.08\.2026/.test(body)&&/28\.08\.2026/.test(body));
+            const hasAdults=/2\s*взросл/i.test(body);
+            const hasKids=/2\s*(?:реб|дет)/i.test(body) || (/10\s*лет/i.test(body)&&/13\s*лет/i.test(body));
+            fs.writeFileSync('status/yandex-travel-discovery.txt','status='+(isBad?'FAIL404':'OK')+'\nhttp='+(resp?resp.status():'none')+'\nurl='+url+'\ntitle='+title.replace(/\n/g,' ')+'\nhas_dates='+hasDates+'\nhas_adults='+hasAdults+'\nhas_kids='+hasKids+'\nbody='+body.replace(/\n/g,' | ')+'\n');
+            if(isBad||!hasDates||!hasAdults||!hasKids)process.exitCode=1;
+          }catch(e){fs.writeFileSync('status/yandex-travel-discovery.txt','status=FAIL\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+          NODE
+      - name: Persist result
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status/yandex-travel-discovery.txt
+          git commit -m "Record Yandex Travel URL discovery [skip ci]" || true
+          git push
+      - name: Fail when verification failed
+        run: |
+          grep -q '^status=OK' status/yandex-travel-discovery.txt
+          grep -q '^has_dates=true' status/yandex-travel-discovery.txt
+          grep -q '^has_adults=true' status/yandex-travel-discovery.txt
+          grep -q '^has_kids=true' status/yandex-travel-discovery.txt
