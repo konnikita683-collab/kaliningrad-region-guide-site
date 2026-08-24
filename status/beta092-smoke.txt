@@ -1,3 +1,6 @@
-status=FAIL
-source_sha=59b358e64e49eb5053281d874b5d47fa3056b246
-error=OST5 runtime patch not active
+status=DIAG
+source_sha=3fdb04b6ac76de8bb131969224963d07066281fd
+badge=NO_BADGE
+globals={"openType":"function","nativeType":"undefined","buildType":"undefined","rewriteType":"undefined"}
+logs=["pageerror:Failed to execute 'write' on 'Document': Unexpected end of input"]
+body=ГАЙД ПО КАЛИНИНГРАДСКОЙ ОБЛАСТИ | Соберём вашу поездку за несколько шагов | Настройка | По дням | Автомобиль | События | Новая поездка | Когда едете? | Ответьте на несколько коротких вопросов — остальное можно изменить позже. | 1 из 5 | Когда едете? |  | Даты можно изменить в любой момент. |  | Начало | Конец | Далее | BETA 0.9
