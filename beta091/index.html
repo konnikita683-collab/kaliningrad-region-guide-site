@@ -11,7 +11,7 @@
 </style>
 </head>
 <body>
-<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка чистой Beta 0.9.1…</div></div>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка Beta 0.9.1…</div></div>
 <script>
 (async()=>{
   try{
@@ -22,7 +22,7 @@
       localStorage.setItem(versionKey,version);
     }
     const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
-    const stamp='20260824-beta091-1';
+    const stamp='20260824-beta091-2';
     const parts=await Promise.all(files.map(async name=>{
       const r=await fetch('../beta/data/'+name+'?v='+stamp,{cache:'no-store'});
       if(!r.ok)throw new Error('data:'+name);
@@ -40,15 +40,16 @@
     const replaceModules=['guest-ages.js','commerce-core.js','housing-commerce.js','beta-runtime.js'];
     for(const name of replaceModules){
       const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      const re=new RegExp('<script\\s+data-guide=["\\\']'+escaped+'["\\\'][^>]*>[\\s\\S]*?<\\/script>','gi');
+      const re=new RegExp("<script\\s+data-guide=[\"']"+escaped+"[\"'][^>]*>[\\s\\S]*?<\\/script>",'gi');
       html=html.replace(re,'');
     }
+    const close='<'+'/script>';
     const injection=[
-      '<script src="./modules/commerce-core.js?v='+stamp+'"><\\/script>',
-      '<script src="./modules/guest-ages.js?v='+stamp+'"><\\/script>',
-      '<script src="./modules/housing-commerce.js?v='+stamp+'"><\\/script>',
-      '<script src="./modules/beta-runtime.js?v='+stamp+'"><\\/script>',
-      '<script>document.title="Гайд по Калининградской области — Beta 0.9.1";<\\/script>'
+      '<script src="./modules/commerce-core.js?v='+stamp+'">'+close,
+      '<script src="./modules/guest-ages.js?v='+stamp+'">'+close,
+      '<script src="./modules/housing-commerce.js?v='+stamp+'">'+close,
+      '<script src="./modules/beta-runtime.js?v='+stamp+'">'+close,
+      '<script>document.title="Гайд по Калининградской области — Beta 0.9.1";'+close
     ].join('');
     html=html.replace(/<\/body>/i,injection+'</body>');
     document.open();document.write(html);document.close();
