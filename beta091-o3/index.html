@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<title>Гайд по Калининградской области — Ostrovok O3</title>
+<style>body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}</style>
+</head>
+<body>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка теста Ostrovok O3…</div></div>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('../beta091-o2/index.html?v=20260824-o3',{cache:'no-store'});
+    if(!r.ok)throw new Error('Не удалось загрузить основу O2');
+    let html=await r.text();
+    html=html.replaceAll('Ostrovok O2','Ostrovok O3').replaceAll('OSTROVOK O2','OSTROVOK O3').replaceAll('ostrovokO2Badge','ostrovokO3Badge').replaceAll('20260824-ostrovok-o2-isolated','20260824-ostrovok-o3-isolated');
+    const old='if(a&&z)u+="?dates="+encodeURIComponent(a+"-"+z);location.href=u;';
+    const next='if(a&&z)u+="?dates="+encodeURIComponent(a+"-"+z)+"&guests=2&search=yes";location.href=u;';
+    if(!html.includes(old))throw new Error('Не найден O2 переход Ostrovok');
+    html=html.replace(old,next);
+    document.open();document.write(html);document.close();
+  }catch(e){document.body.innerHTML='<div class="load"><b>Ostrovok O3 не загрузился</b><div class="muted">'+String(e&&e.message||e)+'</div></div>';}
+})();
+</script>
+</body>
+</html>
