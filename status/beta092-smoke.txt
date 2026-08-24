@@ -1,9 +1,14 @@
 status=PASS
-source_sha=4296334e090da8ecaa5f4d6acf6bd838196f3061
+source_sha=7c88abb59ea27e32f6a1d458303a6bc0a093d247
 initial_cities=0
 stay=24 авг. — 28 авг.
 child_ages=10,13
 yandex=https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa
 ostrovok=https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes
 localrent=https://www.localrent.com/ru/russia/kaliningrad/?marker=carapp&r=17555
-disclosure=Партнёрская ссылка · marker carapp
+route_days=5
+day1=пн, 24 августа | День 1 · Зеленоградск | День приезда · Зеленоградск | id=boundary-arrival | home=Зеленоградск | car=false | load=лёгкий
+day2=вт, 25 августа | День 2 · Зеленоградск | Зеленоградск: променад, Курортный проспект и море | id=zelen | home=Зеленоградск | car=false | load=лёгкий
+day3=ср, 26 августа | День 3 · Зеленоградск | Куршская коса: лес, Рыбачий и Высота Эфа | id=kosa | home=Зеленоградск | car=true | load=активный
+day4=чт, 27 августа | День 4 · Зеленоградск | Западное побережье: Филинская бухта и безопасный road-trip | id=coast | home=Зеленоградск | car=true | load=средний
+day5=пт, 28 августа | День 5 · Зеленоградск | День вылета · Зеленоградск | id=boundary-departure | home=Зеленоградск | car=false | load=лёгкий
