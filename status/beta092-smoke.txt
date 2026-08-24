@@ -1,5 +1,9 @@
-status=PASS
-source_sha=c0275f28810548ff8f9f254b52ceeee914098371
-initial_cities=0
-single_city=24 авг. — 28 авг.
-recalc=PASS
+status=OST_DIAG
+source_sha=e4878050bb54aa16667f8094401ed7feb73c980a
+stay=24 авг. — 28 авг.
+provider_count=1
+opened=https://ostrovok.ru/hotel/russia/%D0%B7%D0%B5%D0%BB%D0%B5%D0%BD%D0%BE%D0%B3%D1%80%D0%B0%D0%B4%D1%81%D0%BA/
+st={"step":2,"start":"2026-08-24","end":"2026-08-28","adults":2,"children":0,"cities":["Зеленоградск"],"housing":"have","car":"maybe","carDays":2,"interests":["sea","nature"]}
+setup={"Зеленоградск":{"start":"2026-08-24","end":"2026-08-28","mode":"find"}}
+lodgingPreview=function lodgingPreview(city,provider){\n const slugs={'Калининград':'kaliningrad','Зеленоградск':'zelenogradsk','Светлогорск':'svetlogorsk','Пионерский':'pionerskiy','Янтарный':'yantarnyi','Балтийск':'baltiisk','Гусев':'gusev'};\n const url=provider==='yandex'?'https://travel.yandex.ru/hotels/'+(slugs[city]||'kaliningrad')+'/':'https://ostrovok.ru/hotel/russia/'+encodeURIComponent(city.toLowerCase())+'/';\n const c=lodgingSetup[city]||{};\n const old=qs('#previewLinkBox');if(old)old.remove();\n const box=document.createElement('div');box.id='previewLinkBox';box.className='preview-link-box';\n box.innerHTML='<b>'+(provider==='yandex'?'Яндекс Путешествия':'Ostrovok')+' · '+city+'</b><span>'+url+'</span><small>Период '+(c.start?lodgingFmt(c.start):'—')+' — '+(c.end?lodgingFmt(c.end):'—')+' сохранён в гайде. В Android откроется сервис бронирования; до подключения партнёрской интеграции даты может потребоваться подтвердить ещё раз. В просмотре из чата внешние переходы заблокированы.</small>';\n document.body.appendChild(box);setTimeout(()=>box.remove(),5000);\n}
+lodgingMode=function lodgingMode(city){return (lodgingSetup[city]&&lodgingSetup[city].mode)||'later'}
