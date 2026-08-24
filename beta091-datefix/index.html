@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<title>Гайд по Калининградской области — Date Fix D1</title>
+<style>body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4eee4;color:#1f2a2b;display:grid;place-items:center;min-height:100vh}.load{padding:24px;text-align:center}.load b{display:block;font-size:20px;margin-bottom:8px}.muted{color:#6d736e;font-size:14px}</style>
+</head>
+<body>
+<div class="load"><b>Гайд по Калининградской области</b><div class="muted">Загрузка проверки дат D1…</div></div>
+<script>
+(async()=>{
+try{
+  const testVersion='datefix-d1';
+  if(localStorage.getItem('guideDateFixTest')!==testVersion){
+    ['guideOnboarding','guideLodgingOnboarding','guideLodgings','guideGuestAges'].forEach(k=>localStorage.removeItem(k));
+    localStorage.setItem('guideDateFixTest',testVersion);
+  }
+  const files=['part-000.txt','p001-0.txt','p001-1.txt','p001-2.txt','p001-3.txt','p001-4.txt','p001-5.txt','p001-6.txt','part-002.txt','part-003.txt','part-004.txt','part-005.txt','part-006.txt'];
+  const stamp='20260824-datefix-d1';
+  const parts=await Promise.all(files.map(async name=>{const r=await fetch('../beta/data/'+name+'?v='+stamp,{cache:'no-store'});if(!r.ok)throw new Error('data:'+name);let text=await r.text();if(name.startsWith('p001-'))text=text.slice(text.indexOf('\n')+1);return text;}));
+  const encoded=parts.join('').replace(/\s+/g,'');const binary=atob(encoded),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  if(!('DecompressionStream' in window))throw new Error('browser');
+  const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));let html=await new Response(stream).text();
+  const replaceModules=['onboarding-beta-ui.js','guest-ages.js','commerce-core.js','housing-onboarding.js','housing-commerce.js','beta-runtime.js'];
+  for(const name of replaceModules){const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const re=new RegExp("<script\\s+data-guide=[\"']"+escaped+"[\"'][^>]*>[\\s\\S]*?<\\/script>",'gi');html=html.replace(re,'');}
+  const close='<'+'/script>';
+  const injection=[
+    '<script src="../beta091/modules/onboarding-beta-ui.js?v='+stamp+'">'+close,
+    '<script src="../beta091/modules/guest-ages.js?v='+stamp+'">'+close,
+    '<script src="../beta091/modules/commerce-core.js?v='+stamp+'">'+close,
+    '<script src="../beta091/modules/housing-onboarding.js?v='+stamp+'">'+close,
+    '<script src="../beta091/modules/housing-commerce.js?v='+stamp+'">'+close,
+    '<script src="../beta091/modules/beta-runtime.js?v='+stamp+'">'+close,
+    '<script>(function(){var el=document.createElement("div");el.textContent="DATE FIX D1";el.style.cssText="position:fixed;right:10px;top:10px;z-index:100000;padding:5px 8px;border-radius:999px;background:#263633;color:#fff;font:800 10px/1 system-ui;pointer-events:none";document.body.appendChild(el);})();'+close
+  ].join('');
+  html=html.replace(/<\/body>/i,injection+'</body>');
+  document.open();document.write(html);document.close();
+}catch(e){document.body.innerHTML='<div class="load"><b>Date Fix D1 не загрузился</b><div class="muted">'+String(e&&e.message||e)+'</div></div>';}
+})();
+</script>
+</body>
+</html>
