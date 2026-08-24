@@ -1,0 +1,48 @@
+name: Localrent discovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/localrent-discovery.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local site
+        run: python3 -m http.server 8000 > /tmp/beta-http.log 2>&1 &
+      - name: Discover car UI
+        run: |
+          mkdir -p status
+          node <<'NODE'
+          const fs=require('fs'); const {chromium}=require('playwright');
+          (async()=>{let b,p;try{
+            b=await chromium.launch({headless:true});p=await b.newPage({viewport:{width:412,height:915},locale:'ru-RU'});
+            await p.goto('http://127.0.0.1:8000/beta092/?ci=localrent-discovery',{waitUntil:'networkidle'});await p.waitForSelector('#wizard');await p.waitForTimeout(250);
+            const buttons=await p.locator('button').allTextContents();
+            const links=await p.locator('a').evaluateAll(as=>as.map(a=>({text:(a.textContent||'').trim(),href:a.href,cls:a.className})));
+            const body=(await p.locator('body').innerText()).slice(0,8000);
+            fs.writeFileSync('status/localrent-discovery.txt','status=OK\nbuttons='+JSON.stringify(buttons)+'\nlinks='+JSON.stringify(links)+'\nbody='+body.replace(/\n/g,' | ')+'\n');
+          }catch(e){fs.writeFileSync('status/localrent-discovery.txt','status=FAIL\nerror='+String(e&&e.message||e)+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+          NODE
+      - name: Persist result
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status/localrent-discovery.txt
+          git commit -m "Record Localrent discovery [skip ci]" || true
+          git push
