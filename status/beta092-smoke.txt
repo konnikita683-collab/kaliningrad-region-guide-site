@@ -1,7 +1,4 @@
-status=PASS
-source_sha=7b7c9f79465cdc5412845ebafb1bcd025a348122
-initial_cities=0
-stay=24 авг. — 28 авг.
-child_ages=10,13
-yandex=https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa
-ostrovok=https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes
+status=LOCALRENT_DIAG
+source_sha=bed13a96a3567d8f38a121315d0c9555e5f52253
+links=[{"href":"https://localrent.com/ru/russia/kaliningrad/","text":"Смотреть автомобили","cls":"rental-open"}]
+car=Автомобиль нужен на 3 дн.24 августа — 25 августа · 2 дн.27 августа · 1 деньAmber Carместный прокатЗалог0 ₽Пробегбез лимита*Топливополный → полныйМойказа счёт компании*Для дневного тарифа «Коса» действует отдельный лимит 250 км.Смотреть автомобилиLocalrentагрегаторЗалогзависит от автоПробегзависит от автоТопливопо условиям автоПолучениегород / аэропортСмотреть автомобилиЯндекс ПрокатагрегаторЗалогзависит от предложенияПробеглимит или безлимитТопливообычно полный → полныйПолучениеаэропорт / адресСмотреть автомобили
