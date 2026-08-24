@@ -29,8 +29,9 @@
     if(!('DecompressionStream' in window))throw new Error('browser');
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
     const html=await new Response(stream).text();
+    const patched=html.replace('</body>','<script src="./hotfix-0.9.js?v=20260824-1"><\/script></body>');
     document.open();
-    document.write(html);
+    document.write(patched);
     document.close();
   }catch(e){
     document.body.innerHTML='<div class="load err"><b>Не удалось открыть тестовую версию</b><div class="muted">Обновите Chrome или Safari и откройте ссылку ещё раз.</div></div>';
