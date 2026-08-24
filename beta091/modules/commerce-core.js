@@ -12,14 +12,13 @@
   function setConfig(next){var local=read('guideCommerceConfig',{});Object.keys(next||{}).forEach(function(k){local[k]=Object.assign({},local[k]||{},next[k]||{});});write('guideCommerceConfig',local);return config();}
   function append(url,key,value){if(value==null||value==='')return url;return url+(url.indexOf('?')>=0?'&':'?')+encodeURIComponent(key)+'='+encodeURIComponent(value);}
   function cleanAges(value){return(Array.isArray(value)?value:[]).map(function(v){return Number(v);}).filter(function(v){return Number.isInteger(v)&&v>=0&&v<=17;});}
-  function dotDate(value){var m=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'.'+m[2]+'.'+m[1]:'';}
   function hotelUrl(ctx){
     ctx=ctx||{};var slug=ctx.slug||'kaliningrad',u='https://travel.yandex.ru/hotels/'+encodeURIComponent(slug)+'/';
     if(ctx.start)u=append(u,'checkinDate',ctx.start);
     if(ctx.end)u=append(u,'checkoutDate',ctx.end);
     if(ctx.adults)u=append(u,'adults',ctx.adults);
     var ages=cleanAges(ctx.childrenAges);
-    u=append(u,'childrenAges',ages.join(','));
+    if(ages.length)u=append(u,'childrenAges',ages.join(','));
     u=append(u,'roomCount',ctx.roomCount||1);
     var c=config().yandexTravel;
     if(c.enabled&&c.affiliateClid){
@@ -34,15 +33,9 @@
     return u;
   }
   function ostrovokUrl(ctx){
-    ctx=ctx||{};var slug=ctx.ostrovokSlug||ctx.slug||'kaliningrad',u='https://ostrovok.ru/hotel/russia/'+encodeURIComponent(slug)+'/';
-    var start=dotDate(ctx.start),end=dotDate(ctx.end);
-    if(start&&end)u=append(u,'dates',start+'-'+end);
-    var adults=Math.max(1,Number(ctx.adults)||2),ages=cleanAges(ctx.childrenAges),children=Math.max(0,Number(ctx.children)||0,ages.length),guests=String(adults);
-    if(ages.length)guests+='and'+ages.join('.');
-    else if(children)guests=String(adults+children);
-    u=append(u,'guests',guests);
-    u=append(u,'search','yes');
-    return u;
+    ctx=ctx||{};
+    var slug=String(ctx.ostrovokSlug||ctx.slug||'kaliningrad').toLowerCase();
+    return 'https://ostrovok.ru/hotel/russia/'+encodeURIComponent(slug)+'/';
   }
   function campaign(){try{return String(localStorage.getItem('guideCampaign')||'').trim();}catch(e){return'';}}
   function track(event){var log=read('guideCommerceClicks',[]),base={ts:new Date().toISOString()},c=campaign();if(c)base.campaign=c;log.push(Object.assign(base,event||{}));if(log.length>200)log=log.slice(log.length-200);write('guideCommerceClicks',log);}
