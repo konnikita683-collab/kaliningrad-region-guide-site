@@ -1,3 +1,9 @@
-status=FAIL
-source_sha=8db70faaed12b967c7026c55cffaef9d790e5dcb
-error=YT1 not active
+status=PASS
+source_sha=4296334e090da8ecaa5f4d6acf6bd838196f3061
+initial_cities=0
+stay=24 авг. — 28 авг.
+child_ages=10,13
+yandex=https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa
+ostrovok=https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes
+localrent=https://www.localrent.com/ru/russia/kaliningrad/?marker=carapp&r=17555
+disclosure=Партнёрская ссылка · marker carapp
