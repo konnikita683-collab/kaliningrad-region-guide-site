@@ -1,6 +1,6 @@
 status=FAIL
-source_sha=131d1dc064f61432476b1807ce5aaf527725ece7
-error=Route days != 5
+source_sha=aa8c112708815ead03197a123908bb113c431fda
+error=Arrival live weather missing
 body=я, если дата входит в доступный прогноз
 ВОДА
 —
