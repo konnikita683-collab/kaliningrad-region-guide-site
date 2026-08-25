@@ -1,6 +1,7 @@
 status=FAIL
-source_sha=aa8c112708815ead03197a123908bb113c431fda
+source_sha=191fd6084b3f37aae137a16df0d9d845a356a81e
 error=Arrival live weather missing
+weatherInstalled=WX2
 body=я, если дата входит в доступный прогноз
 ВОДА
 —
