@@ -1,0 +1,36 @@
+name: PB5.2 holiday debug
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "beta092pb52/**"
+      - ".github/workflows/pb52-holiday-debug.yml"
+permissions:
+  contents: read
+jobs:
+  holiday:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+      - run: |
+          node <<'NODE'
+          const{chromium}=require('playwright');
+          (async()=>{let b;try{
+            b=await chromium.launch({headless:true});
+            const p=await b.newPage({viewport:{width:412,height:915},isMobile:true,hasTouch:true,locale:'ru-RU'});
+            await p.goto('http://127.0.0.1:8000/beta092pb52/?ci=holiday',{waitUntil:'networkidle'});
+            await p.waitForSelector('#wizard',{timeout:15000});
+            await p.locator('#a').fill('2026-12-30');await p.locator('#b').fill('2027-01-03');await p.locator('#next').click();
+            await p.locator('#ad').fill('2');await p.locator('#ch').fill('2');await p.waitForTimeout(150);await p.locator('[data-child-age="0"]').selectOption('10');await p.locator('[data-child-age="1"]').selectOption('13');await p.locator('#next').click();await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click();
+            await p.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();});
+            await p.waitForFunction(()=>document.querySelectorAll('.day').length===5,{timeout:6000});
+            await p.waitForTimeout(2500);
+            const rows=await p.locator('.day').evaluateAll(ds=>ds.map((d,i)=>({i,label:d.querySelector('.daynum')?.textContent,title:d.querySelector('.day-head h3')?.textContent,text:d.innerText.slice(0,1800),holiday:[...d.querySelectorAll('*')].filter(e=>/🎄|новогод|рождеств|ярмарк|празднич/i.test(e.textContent||'') && ![...e.children].some(c=>/🎄|новогод|рождеств|ярмарк|празднич/i.test(c.textContent||''))).map(e=>({tag:e.tagName,cls:e.className,text:(e.textContent||'').trim().slice(0,400)}))})));
+            console.log('HOLIDAY_ROWS='+JSON.stringify(rows));
+          }finally{if(b)await b.close();}})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
