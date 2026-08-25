@@ -1,0 +1,55 @@
+name: Preblogger DOM diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/preblogger-diag.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start local site
+        run: python3 -m http.server 8000 > /tmp/http.log 2>&1 &
+      - name: Inspect actual beta DOM
+        run: |
+          mkdir -p status
+          node <<'NODE'
+          const fs=require('fs'); const {chromium}=require('playwright');
+          (async()=>{let b;try{
+            b=await chromium.launch({headless:true}); const p=await b.newPage({viewport:{width:412,height:915},locale:'ru-RU'});
+            await p.goto('http://127.0.0.1:8000/beta092/?diag=preblogger',{waitUntil:'networkidle'}); await p.waitForSelector('#wizard');
+            await p.locator('#a').fill('2026-08-25'); await p.locator('#b').fill('2026-08-29'); await p.locator('#next').click();
+            await p.locator('#ad').fill('2'); await p.locator('#ch').fill('2'); await p.waitForTimeout(150);
+            await p.locator('[data-child-age="0"]').selectOption('10'); await p.locator('[data-child-age="1"]').selectOption('13'); await p.locator('#next').click();
+            await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click(); await p.locator('#next').click();
+            await p.waitForTimeout(100); if(await p.locator('#next').count()) await p.locator('#next').click();
+            await p.waitForTimeout(100); if(await p.locator('#next').count()) await p.locator('#next').click();
+            await p.waitForTimeout(900);
+            const first=await p.locator('#planList .day').first().evaluate(el=>el.outerHTML);
+            await p.locator('[data-tab="events"]').click(); await p.waitForTimeout(250);
+            const events=await p.locator('#events').evaluate(el=>el.outerHTML);
+            fs.writeFileSync('status/preblogger-diag.txt','FIRST_DAY\n'+first+'\n\nEVENTS\n'+events+'\n');
+          }catch(e){fs.writeFileSync('status/preblogger-diag.txt','ERROR\n'+String(e&&e.stack||e));process.exitCode=1;}finally{if(b)await b.close();}})();
+          NODE
+      - name: Persist diagnostic
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "4189826+github-actions[bot]@users.noreply.github.com"
+          git add status/preblogger-diag.txt
+          git commit -m "Record preblogger DOM diagnostic [skip ci]" || true
+          git push
