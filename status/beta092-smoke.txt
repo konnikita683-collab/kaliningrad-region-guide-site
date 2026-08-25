@@ -1,5 +1,5 @@
 status=PASS
-source_sha=fcf5e394a2e159ecf578ecebfaea1d973f4062fe
+source_sha=2f687b73b400d3de160a45c296308b091c6880f2
 stay=24 авг. — 28 авг.
 weather=PASS
 yandex=https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa
