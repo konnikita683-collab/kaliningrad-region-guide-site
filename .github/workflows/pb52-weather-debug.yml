@@ -1,0 +1,46 @@
+name: PB5.2 weather debug
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "beta092pb5/weather-single.js"
+      - "beta092pb52/**"
+      - ".github/workflows/pb52-weather-debug.yml"
+permissions:
+  contents: read
+jobs:
+  weather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+      - run: |
+          node <<'NODE'
+          const{chromium}=require('playwright');
+          (async()=>{let b;try{
+            b=await chromium.launch({headless:true});
+            const p=await b.newPage({viewport:{width:412,height:915},isMobile:true,hasTouch:true,locale:'ru-RU'});
+            p.on('console',m=>console.log('BROWSER',m.type(),m.text()));
+            await p.route('https://api.open-meteo.com/**',r=>{
+              const url=new URL(r.request().url());
+              console.log('WEATHER_REQ',url.searchParams.get('latitude'),url.searchParams.get('longitude'));
+              r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({daily:{time:['2026-08-25','2026-08-26','2026-08-27','2026-08-28','2026-08-29'],weather_code:[1,2,3,2,1],temperature_2m_max:[22,21,20,19,18],temperature_2m_min:[14,13,12,11,10],precipitation_probability_max:[10,20,30,40,50]}})});
+            });
+            await p.route('https://marine-api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({hourly:{time:['2026-08-25T12:00','2026-08-26T12:00','2026-08-27T12:00','2026-08-28T12:00','2026-08-29T12:00'],sea_surface_temperature:[19,19,18.5,18,17.5],wave_height:[0.3,0.4,0.5,0.6,0.7]}})}));
+            await p.goto('http://127.0.0.1:8000/beta092pb52/?ci=android',{waitUntil:'networkidle'});
+            await p.waitForSelector('#wizard',{timeout:15000});
+            await p.locator('#a').fill('2026-08-25');await p.locator('#b').fill('2026-08-29');await p.locator('#next').click();
+            await p.locator('#ad').fill('2');await p.locator('#ch').fill('2');await p.waitForTimeout(150);await p.locator('[data-child-age="0"]').selectOption('10');await p.locator('[data-child-age="1"]').selectOption('13');await p.locator('#next').click();await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click();
+            await p.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();});
+            await p.waitForFunction(()=>document.querySelectorAll('.day').length===5,{timeout:6000});
+            await p.waitForTimeout(4000);
+            const rows=await p.locator('.day').evaluateAll(ds=>ds.map((d,i)=>({i,title:d.querySelector('.day-head h3')?.textContent,label:d.querySelector('.daynum')?.textContent,live:!!d.querySelector('.guide-live-weather'),date:d.dataset.guideWeatherDate,text:d.querySelector('.guide-live-weather')?.innerText||'',legacy:/Прогноз ближе к дате/.test(d.innerText)})));
+            console.log('WEATHER_ROWS='+JSON.stringify(rows));
+            if(rows.filter(x=>x.live).length!==5)throw new Error('weather live cards != 5');
+            console.log('PB5.2 WEATHER DEBUG PASS');
+          }finally{if(b)await b.close();}})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
