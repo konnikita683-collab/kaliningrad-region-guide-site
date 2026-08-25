@@ -1,0 +1,76 @@
+name: PB5.2 release candidate smoke
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "beta092pb5/**"
+      - "beta092pb52/**"
+      - "beta092/**"
+      - ".github/workflows/pb52-release-smoke.yml"
+permissions:
+  contents: read
+jobs:
+  rc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm install --no-save playwright@1.55.0 && npx playwright install --with-deps chromium
+      - run: python3 -m http.server 8000 >/tmp/http.log 2>&1 &
+      - run: |
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          const assert=(ok,msg)=>{if(!ok)throw new Error(msg)};
+          async function configure(page,start,end){
+            await page.goto('http://127.0.0.1:8000/beta092pb52/?ci=rc',{waitUntil:'networkidle'});
+            await page.waitForSelector('#wizard',{timeout:15000});
+            assert((await page.locator('body').innerText()).includes('BETA 0.9.2 PB5.2'),'PB5.2 badge missing');
+            await page.locator('#a').fill(start);await page.locator('#b').fill(end);await page.locator('#next').click();
+            await page.locator('#ad').fill('2');await page.locator('#ch').fill('2');await page.waitForTimeout(120);
+            await page.locator('[data-child-age="0"]').selectOption('10');await page.locator('[data-child-age="1"]').selectOption('13');
+            await page.locator('#next').click();await page.locator('button[data-g="city"][data-v="Зеленоградск"]').click();
+            await page.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();});
+            await page.waitForFunction(()=>document.querySelectorAll('.day').length===5,{timeout:6000});
+          }
+          (async()=>{let b;try{
+            b=await chromium.launch({headless:true});
+            const ctx=await b.newContext({viewport:{width:412,height:915},isMobile:true,hasTouch:true,locale:'ru-RU'});
+            const summer=await ctx.newPage();
+            summer.on('pageerror',e=>console.log('PAGEERROR',e.message));
+            await summer.route('https://api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({daily:{time:['2026-08-25','2026-08-26','2026-08-27','2026-08-28','2026-08-29'],weather_code:[1,2,3,2,1],temperature_2m_max:[22,21,20,19,18],temperature_2m_min:[14,13,12,11,10],precipitation_probability_max:[10,20,30,40,50]}})}));
+            await summer.route('https://marine-api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({hourly:{time:['2026-08-25T12:00','2026-08-26T12:00','2026-08-27T12:00','2026-08-28T12:00','2026-08-29T12:00'],sea_surface_temperature:[19,19,18.5,18,17.5],wave_height:[0.3,0.4,0.5,0.6,0.7]}})}));
+            await configure(summer,'2026-08-25','2026-08-29');
+            await summer.waitForFunction(()=>document.querySelectorAll('.guide-live-weather').length===5,{timeout:6000});
+            const weather=await summer.locator('.day').evaluateAll(ds=>ds.map(d=>({n:d.querySelectorAll('.guide-live-weather').length,legacy:/Прогноз ближе к дате/.test(d.innerText)})));
+            assert(weather.every(x=>x.n===1&&!x.legacy),'weather not exactly one live block per day');
+            assert(await summer.locator('.guide-day-notes').count()===5,'notes missing on some day');
+            assert(await summer.locator('.guide-day-excursion').count()>=3,'excursion recommendations missing');
+            assert(await summer.locator('.daynum .mini-tree').count()===0,'holiday marker leaked into summer route');
+            let d=summer.locator('.day').nth(3);if(/Открыть/.test(await d.locator('.day-toggle').innerText()))await d.locator('.day-toggle').click();
+            await d.locator('.tools select').selectOption({label:'Амалиенау, проспект Мира и зоопарк'});await d.locator('.tools button').click();
+            await summer.waitForFunction(()=>{const d=document.querySelector('.day[data-i="3"]');return d&&/Калининград/.test(d.querySelector('.daynum')?.textContent||'')&&d.querySelector('.guide-day-excursion')&&/Скрыть/.test(d.querySelector('.day-toggle')?.textContent||'')},{timeout:5000});
+            d=summer.locator('.day[data-i="3"]');let href=await d.locator('[data-tripster-catalog]').getAttribute('href');assert(/tripster\.ru\/experience\/Kaliningrad/.test(href||''),'Kaliningrad excursion link wrong');
+            await d.locator('.guide-day-notes textarea').fill('RC заметка');assert((await d.locator('.guide-day-notes textarea').inputValue())==='RC заметка','note input failed');
+            await d.locator('.tools select').selectOption({label:'Янтарный: пляж, парк Беккера и янтарная история'});await d.locator('.tools button').click();
+            await summer.waitForFunction(()=>{const d=document.querySelector('.day[data-i="3"]');return d&&/Янтарный/.test(d.querySelector('.daynum')?.textContent||'')&&/Экскурсии в Янтарный/.test(d.innerText)},{timeout:5000});
+            const partnerCounts=await summer.evaluate(()=>({y:[...document.querySelectorAll('a')].filter(a=>/yandex/i.test(a.href)).length,o:[...document.querySelectorAll('a')].filter(a=>/ostrovok/i.test(a.href)).length,l:[...document.querySelectorAll('a')].filter(a=>/localrent/i.test(a.href)).length}));
+            assert(partnerCounts.y>0&&partnerCounts.o>0&&partnerCounts.l>0,'partner links missing '+JSON.stringify(partnerCounts));
+            const eventsTab=summer.locator('[data-tab="events"]');if(await eventsTab.count()){await eventsTab.click();await summer.waitForTimeout(500);const ec=await summer.locator('.event-card').count();if(ec)assert(await summer.locator('.guide-event-ticket-link').count()===ec,'event ticket buttons missing');}
+            console.log('SUMMER_RC_PASS',JSON.stringify(partnerCounts));
+
+            const holiday=await ctx.newPage();
+            await holiday.route('https://api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({daily:{time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_probability_max:[]}})}));
+            await holiday.route('https://marine-api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({hourly:{time:[],sea_surface_temperature:[],wave_height:[]}})}));
+            await configure(holiday,'2026-12-30','2027-01-03');
+            await holiday.waitForFunction(()=>[...document.querySelectorAll('.day')].every(d=>/🎄/.test(d.querySelector('.daynum')?.textContent||'')),{timeout:5000});
+            const hr=await holiday.locator('.day').evaluateAll(ds=>ds.map(d=>d.innerText));
+            assert(hr.length===5,'holiday route is not 5 days');
+            assert(/празднич/i.test(hr[2]),'1 January holiday logic missing');
+            assert(/ярмарк|новогод/i.test(hr[3]),'holiday fair context missing');
+            assert((await holiday.locator('.daynum .mini-tree').count())===5,'not every holiday day has one marker');
+            console.log('HOLIDAY_RC_PASS');
+            console.log('PB5.2 RELEASE CANDIDATE SMOKE PASS');
+          }finally{if(b)await b.close();}})().catch(e=>{console.error(e);process.exit(1)});
+          NODE
