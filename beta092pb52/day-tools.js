@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   if(window.__guideDayToolsInstalled)return;
-  window.__guideDayToolsInstalled='DT5';
+  window.__guideDayToolsInstalled='DT6';
   function q(s,r){return(r||document).querySelector(s);}
   function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
   function state(){return(typeof st!=='undefined'&&st)||{};}
@@ -41,7 +41,7 @@
   }
   function fixDayLabel(card){
     var title=scenarioTitle(card),r=recFor(card),n=q('.daynum',card);if(!n||!title||isArrival(card,dayIndex(card,0)))return;
-    var m=(n.textContent||'').match(/^(День\s+\d+)/i);if(m)n.textContent=m[1]+' · '+r.place;
+    var m=(n.textContent||'').match(/^(День\s+\d+)/i);if(m){var next=m[1]+' · '+r.place;if(n.textContent!==next)n.textContent=next;}
   }
   function localized(text,place){
     var s=(text||'').trim();if(!s||s.indexOf(place+' · ')===0)return s;
@@ -78,7 +78,7 @@
   function restoreOriginalRecommendations(){qa('.event-recommendation').forEach(function(x){x.style.removeProperty('display');x.hidden=false;});}
   function ticketUrl(card){var t=card.innerText||'';if(/Янтарь-холл|Кадышев|Банкет/i.test(t))return'https://yantarkassa.ru/events';if(/Светлогорск|Индия звучащая|фитнес-танцы/i.test(t))return'https://www.svetlogorsk-tourism.ru/calendar/';return'https://visit-kaliningrad.ru/events/';}
   function addEventLinks(){qa('.event-card').forEach(function(card){if(q('.guide-event-ticket-link',card))return;var a=document.createElement('a');a.className='guide-event-ticket-link';a.href=ticketUrl(card);a.target='_blank';a.rel='noopener';a.textContent='Билеты / подробнее';var actions=q('.event-actions',card);if(actions)actions.insertBefore(a,actions.firstChild);else card.appendChild(a);});}
-  var timer=0;function refresh(){timer=0;try{restoreOriginalRecommendations();qa('.day').forEach(function(c){fixDayLabel(c);fixTimelineLocations(c);});addExcursions();addNotes();addEventLinks();}catch(e){console.error('DT5 refresh',e);}}
+  var timer=0;function refresh(){timer=0;try{restoreOriginalRecommendations();qa('.day').forEach(function(c){fixDayLabel(c);fixTimelineLocations(c);});addExcursions();addNotes();addEventLinks();}catch(e){console.error('DT6 refresh',e);}}
   function schedule(delay){clearTimeout(timer);timer=setTimeout(refresh,typeof delay==='number'?delay:100);}
   function reopenAfterReplace(card){var idx=card&&card.dataset&&card.dataset.i;if(idx==null)return;[120,350,800].forEach(function(ms){setTimeout(function(){var c=q('.day[data-i="'+idx+'"]');if(!c)return;var b=q('.day-toggle',c);if(b&&/Открыть/i.test(b.textContent||''))b.click();schedule(20);},ms);});}
   function attachObserver(){var root=q('#planList')||q('[data-tab-panel="days"]')||q('.plan-list');if(!root||root.__guideDayToolsObserved)return false;root.__guideDayToolsObserved=true;new MutationObserver(function(){schedule(80);}).observe(root,{childList:true,subtree:true,characterData:true});return true;}
