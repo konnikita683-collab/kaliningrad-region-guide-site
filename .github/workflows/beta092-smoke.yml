@@ -47,8 +47,10 @@ jobs:
             const stay=(await p.locator('.ob-lodging-head span').first().textContent()||'').trim(); if(!/24\s*авг.*28\s*авг/i.test(stay))throw new Error('DATE2 regression: '+stay);
             const yandex=await p.evaluate(()=>window.guideBuildYandexTravelUrl('Зеленоградск')); if(!/checkinDate=2026-08-24/.test(yandex)||!/checkoutDate=2026-08-28/.test(yandex)||!/childrenAges=10%2C13/.test(yandex))throw new Error('Yandex regression: '+yandex);
             const ost=await p.evaluate(()=>window.guideBuildOstrovokUrl('Зеленоградск')); if(ost!=='https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.2026-28.08.2026&guests=2&search=yes')throw new Error('Ostrovok regression: '+ost);
-            await p.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();}); await p.waitForTimeout(1000);
+            await p.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();}); await p.waitForTimeout(500);
             const days=p.locator('.day'); if(await days.count()!==5)throw new Error('Route days != 5, got '+await days.count());
+            if(await p.locator('[data-tab="days"]').count())await p.locator('[data-tab="days"]').click();
+            await p.waitForTimeout(900);
             const first=days.first(),last=days.nth(4); if(await first.locator('.guide-live-boundary-weather').count()!==1)throw new Error('Arrival live weather missing'); if(await last.locator('.guide-live-boundary-weather').count()!==1)throw new Error('Departure live weather missing');
             const firstText=await first.innerText(); if(/Прогноз ближе к дате/i.test(firstText))throw new Error('Stale arrival forecast still visible'); if(!/18…24°/.test(firstText)||!/19\.1°/.test(firstText))throw new Error('Arrival forecast values missing: '+firstText.slice(0,700));
             await p.evaluate(()=>{st.car='yes';renderCar([{car:true},{car:true},{car:false},{car:true}]);}); await p.waitForTimeout(120);
@@ -56,7 +58,7 @@ jobs:
             await p.locator('[data-tab="events"]').click(); await p.waitForTimeout(250);
             const afisha=await p.locator('[data-event-portal="afisha"]').getAttribute('href'),tripster=await p.locator('[data-event-portal="tripster"]').getAttribute('href'); if(afisha!=='https://afisha.yandex.ru/kaliningrad')throw new Error('Afisha link wrong: '+afisha); if(tripster!=='https://experience.tripster.ru/experience/Kaliningrad/')throw new Error('Tripster link wrong: '+tripster);
             fs.writeFileSync('status/beta092-smoke.txt','status=PASS\nsource_sha='+process.env.GITHUB_SHA+'\nstay='+stay+'\nweather_arrival=18…24C, sea 19.1C\nyandex='+yandex+'\nostrovok='+ost+'\nlocalrent='+localrent+'\nafisha='+afisha+'\ntripster='+tripster+'\nroute_days=5\n');
-          }catch(e){let diag='';try{diag='\nbody='+(await p.locator('body').innerText()).slice(-2400);}catch(_){}fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+diag+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
+          }catch(e){let diag='';try{diag='\nweatherInstalled='+(await p.evaluate(()=>String(window.__guideBoundaryWeatherFixInstalled||'')))+'\nbody='+(await p.locator('body').innerText()).slice(-2400);}catch(_){}fs.writeFileSync('status/beta092-smoke.txt','status=FAIL\nsource_sha='+process.env.GITHUB_SHA+'\nerror='+String(e&&e.message||e)+diag+'\n');process.exitCode=1;}finally{if(b)await b.close();}})();
           NODE
       - name: Persist result
         if: always()
