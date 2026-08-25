@@ -1,6 +1,10 @@
 name: PB5.2 photo comments audit
 on:
   workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/pb52-photo-comments-audit.yml"
 permissions:
   contents: read
 jobs:
