@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   if(window.__guideDayToolsInstalled)return;
-  window.__guideDayToolsInstalled='DT3';
+  window.__guideDayToolsInstalled='DT4';
   function q(s,r){return(r||document).querySelector(s);}
   function qa(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));}
   function state(){return (typeof st!=='undefined'&&st)||{};}
@@ -28,8 +28,8 @@
     if(/Курш|Высот[аы] Эфа|Танцующ|Рыбач/i.test(text))return CUR;
     if(/Балтийск|Янтарн|Филинск|Западное побережье/i.test(text))return WEST;
     if(/Светлогорск|Раушен/i.test(text))return SVET;
-    if(/Зеленоградск/i.test(text))return ZEL;
     if(/форт|Д[её]нхофф|Штайн|Амалиенау|Канта|К[её]нигсберг|Рыбн|Калининград/i.test(text))return KAL;
+    if(/Зеленоградск/i.test(text))return ZEL;
     return null;
   }
   function pick(card,i){var s=actualScenario(i);if(s&&s.id&&byId[s.id])return byId[s.id];var r=textPick(card);if(r)return r;return byBase[baseFor(i)]||REGION;}
@@ -40,7 +40,7 @@
   function ticketUrl(card){var t=card.innerText||'';if(/Янтарь-холл|Кадышев|Банкет/i.test(t))return'https://yantarkassa.ru/events';if(/Светлогорск|Индия звучащая|фитнес-танцы/i.test(t))return'https://www.svetlogorsk-tourism.ru/calendar/';return'https://visit-kaliningrad.ru/events/';}
   function addEventLinks(){qa('.event-card').forEach(function(card){if(q('.guide-event-ticket-link',card))return;var a=document.createElement('a');a.className='guide-event-ticket-link';a.href=ticketUrl(card);a.target='_blank';a.rel='noopener';a.textContent='Билеты / подробнее';var actions=q('.event-actions',card);if(actions)actions.insertBefore(a,actions.firstChild);else card.appendChild(a);});}
   function cleanLegacy(){qa('.day .event-recommendation').forEach(function(x){x.style.display='none';});}
-  var scheduled=false;function refresh(){scheduled=false;try{cleanLegacy();addExcursions();addNotes();addEventLinks();}catch(e){console.error('DT3 refresh',e);}}
+  var scheduled=false;function refresh(){scheduled=false;try{cleanLegacy();addExcursions();addNotes();addEventLinks();}catch(e){console.error('DT4 refresh',e);}}
   function schedule(){if(scheduled)return;scheduled=true;setTimeout(refresh,100);}
   function attachObserver(){var root=q('#planList')||q('[data-tab-panel="days"]')||q('.plan-list');if(!root||root.__guideDayToolsObserved)return false;root.__guideDayToolsObserved=true;new MutationObserver(function(){schedule();}).observe(root,{childList:true,subtree:true});return true;}
   var stl=document.createElement('style');stl.id='guide-day-tools-style';stl.textContent='.guide-day-excursion{margin:0 16px 12px;padding:13px;border:1px solid var(--line,#ddd);border-radius:14px;background:#f7faf9}.guide-day-excursion.is-booked{background:#eef7f1;border-color:#a7c9b1}.guide-day-excursion-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--accent,#2f7d78);font-weight:850;margin-bottom:4px}.guide-day-excursion>b{display:block;font-size:15px;line-height:1.3}.guide-day-excursion>span{display:block;margin-top:4px;color:var(--muted,#777);font-size:11px}.guide-day-excursion>a,.guide-event-ticket-link{display:block;margin-top:10px;padding:10px 11px;border-radius:11px;background:var(--accent,#2f7d78);color:#fff!important;text-align:center;text-decoration:none!important;font-weight:850}.guide-booked-toggle{width:100%;margin-top:8px;padding:9px 10px;border:1px solid var(--accent,#2f7d78);border-radius:10px;background:#fff;color:var(--accent,#2f7d78);font:800 12px/1.2 system-ui}.guide-booked-status{margin-top:9px;padding:8px 9px;border-radius:9px;background:#dff1e5;color:#245b38;font-size:11px;font-weight:800}.guide-day-notes{margin:12px 16px 16px;padding:10px 12px;border:1px solid var(--line,#ddd);border-radius:12px;background:#fff}.guide-day-notes summary{cursor:pointer;font-weight:800;font-size:12px;color:var(--accent,#2f7d78)}.guide-day-notes textarea{width:100%;margin-top:9px;padding:10px;border:1px solid var(--line,#ddd);border-radius:9px;resize:vertical;font:13px/1.4 system-ui;color:inherit;background:#fff}.event-actions .guide-event-ticket-link{margin-top:0}.day .event-recommendation{display:none!important}@media(max-width:520px){.event-actions{grid-template-columns:1fr!important}}';if(!q('#'+stl.id))document.head.appendChild(stl);
