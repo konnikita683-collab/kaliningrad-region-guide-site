@@ -1,5 +1,5 @@
 status=PASS
-source_sha=2773cc018e32356ae61b3acd0fd51b6c5316402e
+source_sha=381c7f61a62a2bcb7a992035382894280f6bc866
 stay=24 авг. — 28 авг.
 weather=PASS
 yandex=https://travel.yandex.ru/hotels/zelenogradsk/?adults=2&checkinDate=2026-08-24&checkoutDate=2026-08-28&childrenAges=10%2C13&roomCount=1&affiliate_clid=15309307&affiliate_vid=housingapp&erid=5jtCeReNx12oajzh1DMXueG&utm_source=distribution&utm_medium=cpa
@@ -7,4 +7,8 @@ ostrovok=https://ostrovok.ru/hotel/russia/zelenogradsk/?q=6135696&dates=24.08.20
 localrent=https://www.localrent.com/ru/russia/kaliningrad/?marker=carapp&r=17555
 afisha=https://afisha.yandex.ru/kaliningrad
 tripster=https://experience.tripster.ru/experience/Kaliningrad/
+excursion_day2=https://experience.tripster.ru/experience/11686/
+excursion_day3=https://experience.tripster.ru/experience/60689/
+excursion_day4=https://experience.tripster.ru/experience/42825/
+event_ticket_links=4
 route_days=5
