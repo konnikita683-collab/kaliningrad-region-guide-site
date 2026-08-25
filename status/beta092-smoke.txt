@@ -1,5 +1,5 @@
 status=FAIL
-source_sha=f1703342a4a8241addb48561f8154bf4ddd71084
+source_sha=b4e066ce61f898c63fd500727302cb046b379ca1
 error=locator.getAttribute: Timeout 30000ms exceeded.
 Call log:
   - waiting for locator('[data-event-portal="afisha"]')
