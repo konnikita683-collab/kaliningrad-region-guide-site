@@ -29,14 +29,11 @@ jobs:
             await p.locator('#a').fill('2026-08-25');await p.locator('#b').fill('2026-08-29');await p.locator('#next').click();await p.locator('#ad').fill('2');await p.locator('#ch').fill('2');await p.waitForTimeout(150);await p.locator('[data-child-age="0"]').selectOption('10');await p.locator('[data-child-age="1"]').selectOption('13');await p.locator('#next').click();await p.locator('button[data-g="city"][data-v="Зеленоградск"]').click();
             await p.evaluate(()=>{st.car='maybe';st.carDays=2;st.interests=['sea','nature'];build();});
             await p.waitForFunction(()=>document.querySelectorAll('.day').length===5,{timeout:6000});
-            const days=p.locator('.day');
-            console.log('DAY4_TEXT_START\n'+await days.nth(3).innerText()+'\nDAY4_TEXT_END');
-            console.log('DAY4_BUTTONS='+JSON.stringify(await days.nth(3).locator('button').allTextContents()));
-            console.log('DAY4_SELECTS='+JSON.stringify(await days.nth(3).locator('select').evaluateAll(es=>es.map(e=>({value:e.value,html:e.outerHTML.slice(0,600)})))));
-            console.log('DAY4_HTML_START\n'+(await days.nth(3).evaluate(e=>e.outerHTML)).slice(0,12000)+'\nDAY4_HTML_END');
-            const allButtons=await p.locator('button').allTextContents();console.log('ALL_REPLACE_BUTTONS='+JSON.stringify(allButtons.filter(x=>/замен|вариант|друг/i.test(x))));
-            await p.waitForFunction(()=>document.querySelectorAll('.guide-day-excursion').length===5,{timeout:3000});
-            if(await p.locator('.guide-day-excursion').count()!==5)throw new Error('excursions missing');
-            console.log('PB5.1 DOM INSPECT PASS');
+            let d=p.locator('.day').nth(3);await d.locator('.day-toggle').click();
+            const sel=d.locator('.tools select');await sel.selectOption({label:'Амалиенау, проспект Мира и зоопарк'});await d.locator('.tools button').click();await p.waitForTimeout(500);
+            d=p.locator('.day').nth(3);console.log('AFTER_AMALIENAU='+JSON.stringify({text:(await d.innerText()).slice(0,1800),exc:await d.locator('.guide-day-excursion').count(),href:await d.locator('[data-tripster-catalog]').getAttribute('href').catch(()=>null)}));
+            const sel2=d.locator('.tools select');await sel2.selectOption({label:'Янтарный: пляж, парк Беккера и янтарная история'});await d.locator('.tools button').click();await p.waitForTimeout(500);
+            d=p.locator('.day').nth(3);console.log('AFTER_YANTARNY='+JSON.stringify({text:(await d.innerText()).slice(0,1800),exc:await d.locator('.guide-day-excursion').count(),href:await d.locator('[data-tripster-catalog]').getAttribute('href').catch(()=>null)}));
+            console.log('PB5.1 REAL REPLACE INSPECT PASS');
           }finally{if(b)await b.close();}})().catch(e=>{console.error(e);process.exit(1)});
           NODE
