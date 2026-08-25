@@ -56,10 +56,18 @@ jobs:
             await d.locator('.guide-day-notes textarea').fill('RC заметка');assert((await d.locator('.guide-day-notes textarea').inputValue())==='RC заметка','note input failed');
             await d.locator('.tools select').selectOption({label:'Янтарный: пляж, парк Беккера и янтарная история'});await d.locator('.tools button').click();
             await summer.waitForFunction(()=>{const d=document.querySelector('.day[data-i="3"]');return d&&/Янтарный/.test(d.querySelector('.daynum')?.textContent||'')&&/Экскурсии в Янтарный/.test(d.innerText)},{timeout:5000});
-            const partnerCounts=await summer.evaluate(()=>({y:[...document.querySelectorAll('a')].filter(a=>/yandex/i.test(a.href)).length,o:[...document.querySelectorAll('a')].filter(a=>/ostrovok/i.test(a.href)).length,l:[...document.querySelectorAll('a')].filter(a=>/localrent/i.test(a.href)).length}));
-            assert(partnerCounts.y>0&&partnerCounts.o>0&&partnerCounts.l>0,'partner links missing '+JSON.stringify(partnerCounts));
+            const partnerAudit=await summer.evaluate(()=>{
+              const ost=typeof window.guideBuildOstrovokUrl==='function'?window.guideBuildOstrovokUrl('Зеленоградск'):'';
+              const ostRewrite=typeof window.guideRewriteOstrovokUrl==='function'?window.guideRewriteOstrovokUrl('https://ostrovok.ru/hotel/russia/zelenogradsk/'):'';
+              return {y:[...document.querySelectorAll('a')].filter(a=>/yandex/i.test(a.href)).length,l:[...document.querySelectorAll('a')].filter(a=>/localrent/i.test(a.href)).length,ost,ostRewrite};
+            });
+            assert(partnerAudit.y>0&&partnerAudit.l>0,'Yandex/Localrent links missing '+JSON.stringify(partnerAudit));
+            assert(/ostrovok\.ru\/hotel\/russia\/zelenogradsk\//.test(partnerAudit.ost),'Ostrovok builder missing '+partnerAudit.ost);
+            assert(/dates=25\.08\.2026-29\.08\.2026/.test(partnerAudit.ost),'Ostrovok dates wrong '+partnerAudit.ost);
+            assert(/guests=2/.test(partnerAudit.ost),'Ostrovok adults wrong '+partnerAudit.ost);
+            assert(partnerAudit.ostRewrite===partnerAudit.ost,'Ostrovok rewrite mismatch');
             const eventsTab=summer.locator('[data-tab="events"]');if(await eventsTab.count()){await eventsTab.click();await summer.waitForTimeout(500);const ec=await summer.locator('.event-card').count();if(ec)assert(await summer.locator('.guide-event-ticket-link').count()===ec,'event ticket buttons missing');}
-            console.log('SUMMER_RC_PASS',JSON.stringify(partnerCounts));
+            console.log('SUMMER_RC_PASS',JSON.stringify(partnerAudit));
 
             const holiday=await ctx.newPage();
             await holiday.route('https://api.open-meteo.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({daily:{time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_probability_max:[]}})}));
