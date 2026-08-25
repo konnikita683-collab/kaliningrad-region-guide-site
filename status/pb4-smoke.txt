@@ -1,0 +1,9 @@
+status=PASS
+source_sha=0892ad7a2428953095886df827bb95fae1707c21
+android_body=PASS
+route_days=5
+weather_days=5
+first_water=19.1C
+first_wave=0.4m
+excursion_catalog_links=3
+event_links=4
