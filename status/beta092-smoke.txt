@@ -1,5 +1,5 @@
 status=FAIL
-source_sha=e1727eaa9133075f5baa80d2e87d2384a055a612
+source_sha=131d1dc064f61432476b1807ce5aaf527725ece7
 error=Route days != 5
 body=я, если дата входит в доступный прогноз
 ВОДА
