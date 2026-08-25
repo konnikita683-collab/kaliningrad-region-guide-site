@@ -52,6 +52,7 @@ jobs:
             await d.locator('.tools select').selectOption({label:'Амалиенау, проспект Мира и зоопарк'});await d.locator('.tools button').click();
             await summer.waitForFunction(()=>{const d=document.querySelector('.day[data-i="3"]');return d&&/Калининград/.test(d.querySelector('.daynum')?.textContent||'')&&d.querySelector('.guide-day-excursion')&&/Скрыть/.test(d.querySelector('.day-toggle')?.textContent||'')},{timeout:5000});
             d=summer.locator('.day[data-i="3"]');let href=await d.locator('[data-tripster-catalog]').getAttribute('href');assert(/tripster\.ru\/experience\/Kaliningrad/.test(href||''),'Kaliningrad excursion link wrong');
+            const noteDetails=d.locator('.guide-day-notes');if(!(await noteDetails.getAttribute('open')))await noteDetails.locator('summary').click();
             await d.locator('.guide-day-notes textarea').fill('RC заметка');assert((await d.locator('.guide-day-notes textarea').inputValue())==='RC заметка','note input failed');
             await d.locator('.tools select').selectOption({label:'Янтарный: пляж, парк Беккера и янтарная история'});await d.locator('.tools button').click();
             await summer.waitForFunction(()=>{const d=document.querySelector('.day[data-i="3"]');return d&&/Янтарный/.test(d.querySelector('.daynum')?.textContent||'')&&/Экскурсии в Янтарный/.test(d.innerText)},{timeout:5000});
