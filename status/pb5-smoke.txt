@@ -1,14 +1,8 @@
-status=PASS
-source_sha=1ef36ab7ea3dd5fc1d5a0ee80e59b56f8c33b24f
-android_body=PASS
-route_days=5
-weather_blocks=5
-legacy_weather=0
-first_water=19.1C
-first_wave=0.4m
-kaliningrad_catalog=PASS
-notes=PASS
-booking_marker=PASS
-yandex=PASS
-ostrovok=PASS
-localrent=PASS
+status=FAIL
+source_sha=c85a049605ffa037afad2bc1eee28daf7c9491db
+error=page.waitForSelector: Timeout 15000ms exceeded.
+Call log:
+  - waiting for locator('#wizard') to be visible
+
+body=Гайд по Калининградской области
+Загрузка PB5…
