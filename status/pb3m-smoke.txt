@@ -1,0 +1,6 @@
+status=PASS
+source_sha=c0df5af69e674d8c176e0a60e81c33921fc2de40
+android_body=PASS
+route_days=5
+excursion_links=3
+event_links=4
