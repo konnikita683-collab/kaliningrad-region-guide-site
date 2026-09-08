@@ -1,0 +1,109 @@
+name: Build RussoTrans ESR department map
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - ".github/workflows/rzd-russotrans.yml"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests beautifulsoup4 lxml
+      - name: Crawl RussoTrans indexes
+        shell: bash
+        run: |
+          mkdir -p out-russotrans
+          python - <<'PY'
+          import requests,re,csv,time
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin,urlparse
+          from collections import deque
+
+          BASE="https://www.russotrans.ru"
+          ROOT="/spravochnik/spravgd/"
+          H={"User-Agent":"Mozilla/5.0 (compatible; RZD-ESR-reference-builder/1.0)"}
+          s=requests.Session(); s.headers.update(H)
+
+          def clean(x): return " ".join((x or "").split())
+          q=deque([BASE+ROOT])
+          seen=set(); rows=[]; pages_with_rows=0
+          max_pages=6000
+
+          def eligible(u, from_url):
+              p=urlparse(u)
+              if p.netloc not in ("www.russotrans.ru","russotrans.ru"): return False
+              path=p.path
+              if not path.startswith(ROOT): return False
+              # Strip obvious assets/actions
+              if any(path.lower().endswith(ext) for ext in (".jpg",".jpeg",".png",".gif",".pdf",".doc",".docx",".xls",".xlsx",".zip")): return False
+              if any(x in path for x in ("/news/","/contacts/","/eng/")): return False
+              # Once on a stations list, follow only pagination/sorting/index links, not station detail cards.
+              fpath=urlparse(from_url).path
+              if "/stations/" in fpath:
+                  if "/stations/" in path:
+                      return True
+                  return False
+              # Before list pages, allow road / department hierarchy but cap path depth.
+              depth=len([x for x in path[len(ROOT):].split("/") if x])
+              return depth <= 4
+
+          while q and len(seen)<max_pages:
+              u=q.popleft()
+              u=u.split("#")[0]
+              if u in seen: continue
+              seen.add(u)
+              try:
+                  r=s.get(u,timeout=20)
+                  if r.status_code!=200: continue
+              except Exception:
+                  continue
+              soup=BeautifulSoup(r.text,"lxml")
+              found=0
+              for tr in soup.select("tr"):
+                  cells=[clean(x.get_text(" ",strip=True)) for x in tr.find_all(["td","th"])]
+                  if len(cells)<4: continue
+                  code=re.sub(r"\D","",cells[0])
+                  if not (4<=len(code)<=6): continue
+                  road=cells[2]; dept=cells[3]
+                  if not road or not dept: continue
+                  rows.append([code.zfill(6),cells[1],road,dept,u])
+                  found+=1
+              if found:
+                  pages_with_rows+=1
+              for a in soup.find_all("a",href=True):
+                  v=urljoin(u,a["href"]).split("#")[0]
+                  if eligible(v,u) and v not in seen:
+                      q.append(v)
+              if len(seen)%250==0:
+                  print("pages",len(seen),"queue",len(q),"rows",len(rows),flush=True)
+
+          # Keep best record per ESR; prefer explicit department not ending ж.д.
+          ded={}
+          for r in rows:
+              old=ded.get(r[0])
+              score=(0 if "ж.д" in r[3].lower() else 2) + (1 if r[2] else 0)
+              if old is None:
+                  ded[r[0]]=r
+              else:
+                  oldscore=(0 if "ж.д" in old[3].lower() else 2)+(1 if old[2] else 0)
+                  if score>oldscore: ded[r[0]]=r
+          vals=sorted(ded.values())
+          with open("out-russotrans/russotrans_esr_department.csv","w",encoding="utf-8-sig",newline="") as f:
+              w=csv.writer(f); w.writerow(["esr","name","road_short","former_department","source"]); w.writerows(vals)
+          with open("out-russotrans/report.txt","w",encoding="utf-8") as f:
+              f.write(f"pages={len(seen)}\npages_with_rows={pages_with_rows}\nraw_rows={len(rows)}\nunique_esr={len(vals)}\n")
+          print("DONE pages",len(seen),"raw",len(rows),"unique",len(vals),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: russotrans-esr-department
+          path: out-russotrans/
+          if-no-files-found: error
+          retention-days: 7
