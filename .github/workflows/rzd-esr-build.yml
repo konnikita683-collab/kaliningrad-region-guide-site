@@ -1,0 +1,32 @@
+name: Build RZD ESR raw data
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - "tools/rzd_esr_builder/**"
+      - ".github/workflows/rzd-esr-build.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip requests beautifulsoup4 lxml
+      - name: Scrape public data
+        run: OUTDIR=out python tools/rzd_esr_builder/scrape.py
+      - name: Show report
+        run: cat out/report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rzd-esr-raw
+          path: out/
+          if-no-files-found: error
+          retention-days: 7
