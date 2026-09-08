@@ -1,0 +1,76 @@
+name: Build NashTransport RZD region seeds
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - ".github/workflows/rzd-nashtransport.yml"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests beautifulsoup4 lxml
+      - name: Scrape searchable station articles
+        shell: bash
+        run: |
+          mkdir -p out-nash
+          python - <<'PY'
+          import requests,re,csv,concurrent.futures
+          from bs4 import BeautifulSoup
+          from urllib.parse import quote
+          API="https://wiki.nashtransport.ru/api.php"
+          H={"User-Agent":"Mozilla/5.0 (compatible; RZD-ESR-reference-builder/1.0)"}
+          s=requests.Session(); s.headers.update(H)
+          titles=[]; cont={}
+          while True:
+              params={"action":"query","list":"search","srsearch":'"Код ЕСР" железная станция',"srnamespace":0,"srlimit":"500","format":"json"}
+              params.update(cont)
+              try:
+                  j=s.get(API,params=params,timeout=30).json()
+              except Exception as e:
+                  print("api fail",e); break
+              titles += [x["title"] for x in j.get("query",{}).get("search",[])]
+              if "continue" not in j: break
+              cont=j["continue"]
+              if len(titles)>10000: break
+          titles=list(dict.fromkeys(titles))
+          print("titles",len(titles))
+          def one(t):
+              u="https://wiki.nashtransport.ru/wiki/"+quote(t.replace(" ","_"),safe="()_-")
+              try:
+                  r=requests.get(u,headers=H,timeout=15)
+                  if r.status_code!=200: return None
+                  text=BeautifulSoup(r.text,"lxml").get_text("\n",strip=True)
+                  mc=re.search(r"Код ЕСР\s*(?:\\n|\\s)+(\d{5,6})",text,re.I)
+                  mr=re.search(r"Регион\s*(?:\\n|\\s)+([^\n]{2,80}?регион)",text,re.I)
+                  md=re.search(r"([А-ЯЁA-Z][А-Яа-яЁёA-Za-z\\- ]{2,50}? железная дорога)",text)
+                  if not (mc and mr and md): return None
+                  name=t
+                  name=re.sub(r"\s*\([^)]*(?:станция|платформа|остановочный пункт|разъезд)[^)]*\)\s*$","",name,flags=re.I).strip()
+                  return [mc.group(1).zfill(6),name,md.group(1).strip(),mr.group(1).strip().removesuffix(" регион").strip(),u]
+              except Exception:
+                  return None
+          rows=[]
+          with concurrent.futures.ThreadPoolExecutor(max_workers=30) as ex:
+              fs=[ex.submit(one,t) for t in titles]
+              for f in concurrent.futures.as_completed(fs):
+                  x=f.result()
+                  if x: rows.append(x)
+          ded={x[0]:x for x in rows}
+          vals=sorted(ded.values())
+          with open("out-nash/nashtransport_rzd_regions.csv","w",encoding="utf-8-sig",newline="") as f:
+              w=csv.writer(f); w.writerow(["esr","name","road","rzd_region","source"]); w.writerows(vals)
+          print("unique",len(vals))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nashtransport-rzd-regions
+          path: out-nash/
+          if-no-files-found: error
+          retention-days: 7
