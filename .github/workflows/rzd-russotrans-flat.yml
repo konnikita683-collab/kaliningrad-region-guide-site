@@ -1,0 +1,67 @@
+name: Build RussoTrans ESR flat map
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - ".github/workflows/rzd-russotrans-flat.yml"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests beautifulsoup4 lxml
+      - name: Scrape sorted station pages
+        shell: bash
+        run: |
+          mkdir -p out-russotrans-flat
+          python - <<'PY'
+          import requests,re,csv,concurrent.futures
+          from bs4 import BeautifulSoup
+          H={"User-Agent":"Mozilla/5.0 (compatible; RZD-ESR-reference-builder/1.0)"}
+          def clean(x): return " ".join((x or "").split())
+          def one(p):
+              u="https://www.russotrans.ru/spravochnik/spravgd/stations/odberby-otdel/" + ("" if p==1 else f"str-{p}/")
+              try:
+                  r=requests.get(u,headers=H,timeout=15)
+                  if r.status_code!=200: return p,[]
+                  soup=BeautifulSoup(r.text,"lxml"); out=[]
+                  for tr in soup.select("tr"):
+                      c=[clean(x.get_text(" ",strip=True)) for x in tr.find_all(["td","th"])]
+                      if len(c)<4: continue
+                      code=re.sub(r"\D","",c[0])
+                      if not (4<=len(code)<=6): continue
+                      if c[2] in ("Дорога","") or c[3] in ("Отделение",""): continue
+                      out.append([code.zfill(6),c[1],c[2],c[3],u])
+                  return p,out
+              except Exception:
+                  return p,[]
+          got={}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=40) as ex:
+              fs=[ex.submit(one,p) for p in range(1,1001)]
+              for n,f in enumerate(concurrent.futures.as_completed(fs),1):
+                  p,rows=f.result(); got[p]=rows
+                  if n%100==0: print("checked",n,"rows",sum(len(x) for x in got.values()),flush=True)
+          allrows=[]
+          for p in sorted(got): allrows += got[p]
+          ded={}
+          for r in allrows: ded[r[0]]=r
+          vals=sorted(ded.values())
+          with open("out-russotrans-flat/russotrans_esr_department.csv","w",encoding="utf-8-sig",newline="") as f:
+              w=csv.writer(f); w.writerow(["esr","name","road_short","former_department","source"]); w.writerows(vals)
+          nonempty=[p for p,v in got.items() if v]
+          with open("out-russotrans-flat/report.txt","w",encoding="utf-8") as f:
+              f.write(f"raw_rows={len(allrows)}\nunique_esr={len(vals)}\nnonempty_pages={len(nonempty)}\nmax_nonempty_page={max(nonempty) if nonempty else 0}\n")
+          print("DONE raw",len(allrows),"unique",len(vals),"maxpage",max(nonempty) if nonempty else 0,flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: russotrans-esr-flat
+          path: out-russotrans-flat/
+          if-no-files-found: error
+          retention-days: 7
