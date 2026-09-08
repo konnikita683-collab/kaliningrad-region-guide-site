@@ -1,0 +1,96 @@
+name: Build Railwayz RZD regions
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - ".github/workflows/rzd-railwayz-lines.yml"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests beautifulsoup4 lxml
+      - name: Scrape Railwayz line pages
+        shell: bash
+        run: |
+          mkdir -p out-railwayz
+          python - <<'PY'
+          import requests,re,csv,concurrent.futures,time
+          from bs4 import BeautifulSoup
+          from urllib.parse import urljoin
+          UA="Mozilla/5.0 (compatible; RZD-ESR-reference-builder/1.0)"
+          def fetch(i):
+              u=f"https://railwayz.info/photolines/line/{i}"
+              try:
+                  r=requests.get(u,headers={"User-Agent":UA},timeout=12)
+                  if r.status_code!=200 or "Код ЕСР" not in r.text or 'ОАО "РЖД"' not in r.text:
+                      return []
+                  soup=BeautifulSoup(r.text,"lxml")
+                  out=[]
+                  for h in soup.find_all(["h2","h3"]):
+                      title=" ".join(h.get_text(" ",strip=True).split())
+                      parts=[]
+                      for sib in h.next_siblings:
+                          if getattr(sib,"name",None) in ("h2","h3"): break
+                          if hasattr(sib,"get_text"):
+                              parts.append(sib.get_text(" ",strip=True))
+                          elif isinstance(sib,str):
+                              parts.append(sib)
+                      block=" ".join(" ".join(parts).split())
+                      mc=re.search(r"Код ЕСР(?:\s*\(Единая сетевая разметка\))?\s*:\s*(\d{5,6})",block,re.I)
+                      if not mc: continue
+                      if 'ОАО "РЖД"' not in block and "РЖД (ОАО" not in block: continue
+                      mr=re.search(r'РЖД\s*\(ОАО\s*"РЖД"\)\s*/\s*([^,]+?железная дорога)(?:\s*,\s*([^,]+?)\s+регион)?(?:\s|$)',block,re.I)
+                      if not mr:
+                          mr=re.search(r'ОАО\s*"РЖД".{0,100}?/\s*([^,]+?железная дорога)(?:\s*,\s*([^,]+?)\s+регион)?',block,re.I)
+                      road=mr.group(1).strip() if mr else ""
+                      region=(mr.group(2) or "").strip() if mr else ""
+                      a=h.find("a",href=re.compile(r"/photolines/station/\d+"))
+                      station_url=urljoin("https://railwayz.info",a.get("href")) if a else ""
+                      name=title
+                      name=re.sub(r"\s*\([^)]*км[^)]*\)\s*.*$","",name,flags=re.I)
+                      typ=""
+                      low=name.lower()
+                      if low.startswith("о.п.") or low.startswith("останов"): typ="остановочный пункт"
+                      elif low.startswith("станция"): typ="станция"
+                      elif low.startswith("разъезд"): typ="разъезд"
+                      elif "обгон" in low: typ="обгонный пункт"
+                      elif "блокпост" in low or "блок-пост" in low: typ="блок-пост"
+                      elif "путевой пост" in low: typ="путевой пост"
+                      elif low.startswith("пост"): typ="пост"
+                      clean=re.sub(r"^(станция|разъезд|обгонный пункт|о\.п\.|остановочный пункт|блокпост|блок-пост|путевой пост|пост)\s+","",name,flags=re.I).strip()
+                      out.append([mc.group(1).zfill(6),clean,typ,road,region,u,station_url])
+                  return out
+              except Exception:
+                  return []
+          rows=[]
+          # Existing public line IDs are around 1..2100; scan with headroom.
+          with concurrent.futures.ThreadPoolExecutor(max_workers=40) as ex:
+              fs=[ex.submit(fetch,i) for i in range(1,2601)]
+              for n,f in enumerate(concurrent.futures.as_completed(fs),1):
+                  rows += f.result()
+                  if n%500==0: print("checked",n,"rows",len(rows),flush=True)
+          # exact ESR can appear on multiple line pages; prefer record with explicit region.
+          ded={}
+          for r in rows:
+              old=ded.get(r[0])
+              if old is None or (r[4] and not old[4]): ded[r[0]]=r
+          vals=sorted(ded.values())
+          with open("out-railwayz/railwayz_rzd_regions.csv","w",encoding="utf-8-sig",newline="") as f:
+              w=csv.writer(f); w.writerow(["esr","name","type","road","rzd_region","line_source","station_source"]); w.writerows(vals)
+          explicit=sum(bool(x[4]) for x in vals)
+          print("unique",len(vals),"explicit_region",explicit)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: railwayz-rzd-regions
+          path: out-railwayz/
+          if-no-files-found: error
+          retention-days: 7
