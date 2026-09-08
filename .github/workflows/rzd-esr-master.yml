@@ -1,0 +1,65 @@
+name: Build RZD ESR master
+
+on:
+  push:
+    branches: [rzd-esr-builder]
+    paths:
+      - ".github/workflows/rzd-esr-master.yml"
+  workflow_dispatch:
+
+jobs:
+  build-master:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q requests beautifulsoup4 lxml
+      - name: Scrape RailLogistic master and OSM adjacency
+        shell: bash
+        run: |
+          mkdir -p out-master
+          python - <<'PY'
+          import csv,re,requests,concurrent.futures,os
+          from bs4 import BeautifulSoup
+          s=requests.Session(); s.headers["User-Agent"]="Mozilla/5.0 RZD-ESR-builder"
+          def one(p):
+              u="https://raillogistic.ru/stations.php" + ("" if p==1 else f"?page={p}")
+              r=s.get(u,timeout=20); r.raise_for_status()
+              soup=BeautifulSoup(r.text,"lxml"); out=[]
+              for tr in soup.select("table tr"):
+                  c=[" ".join(x.get_text(" ",strip=True).split()) for x in tr.find_all(["td","th"])]
+                  if len(c)<6: continue
+                  code=re.sub(r"\D","",c[0])
+                  if not (4<=len(code)<=6): continue
+                  code=code.zfill(6)
+                  lat=lon=""
+                  m=re.search(r"(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)",c[5])
+                  if m: lat,lon=m.group(1),m.group(2)
+                  out.append([code,c[1],c[2],c[3],c[4],lat,lon,u])
+              return p,out
+          got={}
+          with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
+              fs={ex.submit(one,p):p for p in range(1,249)}
+              for f in concurrent.futures.as_completed(fs):
+                  p,rows=f.result(); got[p]=rows
+          rows=[]
+          for p in range(1,249): rows+=got.get(p,[])
+          with open("out-master/raillogistic.csv","w",encoding="utf-8-sig",newline="") as f:
+              w=csv.writer(f); w.writerow(["esr","name","type","road","rf_region","lat","lon","source"]); w.writerows(rows)
+          print("rows",len(rows),"unique",len({x[0] for x in rows}))
+          for u in ["https://osm.sbin.ru/esr/neighb.csv","http://osm.sbin.ru/esr/neighb.csv"]:
+              try:
+                  r=s.get(u,timeout=30)
+                  if r.ok and len(r.content)>1000:
+                      open("out-master/osm_neighb.csv","wb").write(r.content); print("neighbors",u,len(r.content)); break
+              except Exception as e: print("neighbor error",u,e)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rzd-esr-master
+          path: out-master/
+          if-no-files-found: error
+          retention-days: 7
