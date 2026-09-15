@@ -1,0 +1,35 @@
+name: Yandex Fuel Probe
+
+on:
+  push:
+    branches: [fuel-yandex-probe]
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query Yandex traffic events endpoint
+        shell: bash
+        run: |
+          set -u
+          NOW=$(date +%s)
+          URL="https://jams.maps.yandex.net/mtrproxy/trf/?lang=ru_RU&ll=30.468924%2C59.860649&z=16&l=trf%2Ctrfe&size=10%2C10&tm=${NOW}"
+          echo "URL=$URL"
+          HTTP_CODE=$(curl -L --max-time 30 -sS \
+            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' \
+            -H 'Accept: application/json, text/javascript, */*; q=0.01' \
+            -H 'Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7' \
+            -H 'Referer: https://yandex.ru/maps/' \
+            -D headers.txt \
+            -o body.txt \
+            -w '%{http_code}' \
+            "$URL" || true)
+          echo "HTTP_CODE=$HTTP_CODE"
+          echo '--- RESPONSE HEADERS ---'
+          cat headers.txt || true
+          echo '--- RESPONSE BODY (first 200k) ---'
+          head -c 200000 body.txt || true
+          echo
+          echo '--- END ---'
