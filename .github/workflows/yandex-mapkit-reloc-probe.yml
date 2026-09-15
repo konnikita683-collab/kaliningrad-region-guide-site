@@ -1,0 +1,105 @@
+name: Yandex MapKit Relocation Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/yandex-mapkit-reloc-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Resolve endpoint relocation and code xrefs
+        shell: bash
+        run: |
+          set -u
+          curl -L --fail --retry 3 -o /tmp/mapkit.aar 'https://repo1.maven.org/maven2/com/yandex/android/maps.mobile/4.42.0-full/maps.mobile-4.42.0-full.aar'
+          rm -rf /tmp/mk && mkdir /tmp/mk && cd /tmp/mk && unzip -q /tmp/mapkit.aar
+          LIB=/tmp/mk/jni/x86_64/libmaps-mobile.so
+          python3 -m pip install -q pyelftools capstone
+          python3 - "$LIB" <<'PY'
+          import sys,struct
+          from elftools.elf.elffile import ELFFile
+          from elftools.elf.relocation import RelocationSection
+          from capstone import Cs,CS_ARCH_X86,CS_MODE_64,x86_const
+          path=sys.argv[1]
+          raw=open(path,'rb').read()
+          needles=[b'comments/list',b'events/get',b'Road events layer url: ',b'/user_events']
+          with open(path,'rb') as f:
+            elf=ELFFile(f)
+            loads=[]
+            for seg in elf.iter_segments():
+              if seg['p_type']=='PT_LOAD': loads.append((seg['p_offset'],seg['p_filesz'],seg['p_vaddr']))
+            def off2va(o):
+              for po,sz,va in loads:
+                if po<=o<po+sz:return va+(o-po)
+            def va2off(v):
+              for po,sz,va in loads:
+                if va<=v<va+sz:return po+(v-va)
+            targets={}
+            for n in needles:
+              o=raw.find(n); targets[n]=off2va(o) if o>=0 else None
+            print('TARGETS', {n.decode():hex(v) if v is not None else None for n,v in targets.items()})
+            # Relocations whose addend points to endpoint string, recursively up to depth 3.
+            rels=[]
+            for sec in elf.iter_sections():
+              if not isinstance(sec,RelocationSection): continue
+              for r in sec.iter_relocations():
+                add=r.entry.get('r_addend')
+                if add is not None: rels.append((r['r_offset'],add,sec.name,r.entry['r_info_type']))
+            print('RELOC_COUNT',len(rels))
+            frontier={v:(n.decode(),0) for n,v in targets.items() if v is not None}
+            allslots={}
+            for depth in range(4):
+              new={}
+              for slot,add,sec,typ in rels:
+                if add in frontier and slot not in allslots:
+                  label=frontier[add][0]
+                  allslots[slot]=(label,depth,add,sec,typ)
+                  new[slot]=(label,depth+1)
+              print('DEPTH',depth,'NEW_SLOTS',[(hex(s),v[0],hex(v[2]),v[3],v[4]) for s,v in allslots.items() if v[1]==depth][:100])
+              frontier=new
+              if not new: break
+
+            # Also literal 64-bit pointers in file.
+            for n,v in targets.items():
+              if v is None: continue
+              pat=struct.pack('<Q',v); pos=0; arr=[]
+              while True:
+                o=raw.find(pat,pos)
+                if o<0:break
+                arr.append((o,off2va(o))); pos=o+1
+              print('LITERAL_PTRS',n.decode(),[(hex(o),hex(va) if va else None) for o,va in arr[:100]])
+              for o,va in arr:
+                if va and va not in allslots: allslots[va]=(n.decode(),0,v,'literal',-1)
+
+            text=elf.get_section_by_name('.text'); td=text.data(); tva=text['sh_addr']
+            md=Cs(CS_ARCH_X86,CS_MODE_64);md.detail=True
+            ins=list(md.disasm(td,tva))
+            refs=[]
+            wanted=set(targets.values())|set(allslots.keys())
+            wanted.discard(None)
+            for idx,i in enumerate(ins):
+              for op in i.operands:
+                target=None
+                if op.type==x86_const.X86_OP_MEM and op.mem.base==x86_const.X86_REG_RIP:
+                  target=i.address+i.size+op.mem.disp
+                elif op.type==x86_const.X86_OP_IMM:
+                  target=op.imm
+                if target in wanted:
+                  refs.append((idx,target))
+            print('CODE_REFS',len(refs))
+            for idx,target in refs[:300]:
+              label='direct'
+              if target in allslots: label=str(allslots[target])
+              else:
+                for n,v in targets.items():
+                  if v==target: label=n.decode()
+              print(f'\n=== REF target={target:#x} {label} at {ins[idx].address:#x} ===')
+              for j in range(max(0,idx-35),min(len(ins),idx+55)):
+                q=ins[j];mark='>>' if j==idx else '  '
+                print(f'{mark}{q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
+          PY
