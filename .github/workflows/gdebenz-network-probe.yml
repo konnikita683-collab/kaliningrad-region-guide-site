@@ -10,9 +10,9 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
-      - name: Capture GdeBenz live requests
+      - name: Extract GdeBenz live status API
         shell: bash
         run: |
           set -euo pipefail
@@ -23,37 +23,27 @@ jobs:
           cat > probe.mjs <<'JS'
           import { chromium } from 'playwright';
           const browser=await chromium.launch({headless:true});
-          const context=await browser.newContext({
-            locale:'ru-RU',timezoneId:'Europe/Moscow',
-            geolocation:{latitude:59.8775,longitude:30.4390},permissions:['geolocation'],
-            viewport:{width:1280,height:900},
-            userAgent:'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36'
-          });
+          const context=await browser.newContext({locale:'ru-RU',timezoneId:'Europe/Moscow',viewport:{width:1280,height:900},userAgent:'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36'});
           const page=await context.newPage();
-          const seen=new Set();
-          page.on('response',async r=>{
-            try{
-              const req=r.request(); if(!['xhr','fetch'].includes(req.resourceType())) return;
-              const u=r.url(); if(seen.has(u))return; seen.add(u);
-              console.log('XHR',r.status(),req.method(),u);
-              const ct=(r.headers()['content-type']||'').toLowerCase();
-              if(ct.includes('json')||ct.includes('text')){
-                const t=(await r.text()).slice(0,30000);
-                if(/fuel|station|gas|petrol|queue|limit|available|confidence|report|lat|lon|АЗС|бенз|топлив|очеред|лимит|отмет/i.test(t)){
-                  console.log('MATCH_BEGIN',u); console.log(t.slice(0,18000)); console.log('MATCH_END');
-                }
-              }
-            }catch(e){}
-          });
           await page.goto('https://gdebenz.ru/sankt-peterburg',{waitUntil:'domcontentloaded',timeout:90000});
-          await page.waitForTimeout(12000);
-          console.log('TITLE',await page.title());
-          const body=(await page.locator('body').innerText()).slice(0,60000);
-          console.log('BODY_MATCHES');
-          for(const line of body.split('\n').map(s=>s.trim()).filter(Boolean)){
-            if(/АЗС|бенз|топлив|очеред|лимит|отмет|92|95|98|100|дизел/i.test(line)) console.log(line.slice(0,1000));
-          }
-          console.log('=== XHR_URLS ==='); for(const u of seen)console.log(u);
+          await page.waitForTimeout(5000);
+          const result=await page.evaluate(async()=>{
+            async function j(path){const r=await fetch('https://api.gdebenz.ru'+path); return {status:r.status, body: await r.json().catch(async()=>({text:await r.text()}))};}
+            const bbox=await j('/api/v1/stations/bbox?min_lat=59.80&max_lat=59.95&min_lon=30.25&max_lon=30.60&limit=500');
+            const arr=bbox.body.items||bbox.body.stations||bbox.body||[];
+            const stations=Array.isArray(arr)?arr:[];
+            const c={lat:59.8775,lon:30.4390};
+            const rad=x=>x*Math.PI/180;
+            const dist=s=>{const R=6371,a=rad(s.lat),b=rad(c.lat),dlat=rad(c.lat-s.lat),dlon=rad(c.lon-(s.lon??s.lng)); const h=Math.sin(dlat/2)**2+Math.cos(a)*Math.cos(b)*Math.sin(dlon/2)**2; return 2*R*Math.asin(Math.sqrt(h));};
+            const nearest=stations.map(s=>({...s,_km:dist(s)})).sort((a,b)=>a._km-b._km).slice(0,25);
+            const ids=nearest.map(s=>s.id).join(',');
+            const stats= ids ? await j('/api/v1/reports/grade-stats?station_ids='+encodeURIComponent(ids)) : null;
+            const first=nearest[0];
+            const guesses=[];
+            if(first){for(const p of [`/api/v1/stations/${first.id}`,`/api/v1/reports?station_id=${first.id}`,`/api/v1/stations/${first.id}/reports`,`/api/v1/reports/latest?station_id=${first.id}`]){try{const x=await j(p); guesses.push({path:p,status:x.status,body:x.body});}catch(e){guesses.push({path:p,error:String(e)})}}}
+            return {bbox_status:bbox.status,count:stations.length,nearest,grade_stats:stats,detail_guesses:guesses};
+          });
+          console.log(JSON.stringify(result,null,2));
           await browser.close();
           JS
           node probe.mjs
