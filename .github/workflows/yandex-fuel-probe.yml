@@ -12,10 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
-      - name: Compact Yandex Maps endpoint probe
+      - name: Target Yandex road-event transport strings
         shell: bash
         run: |
           set -u
+          set +o pipefail
           git clone -q https://github.com/kiber-io/apkdgo.git /tmp/apkdgo
           cd /tmp/apkdgo && go build -o /tmp/apkd ./apkd
           mkdir -p /tmp/pkg
@@ -23,27 +24,26 @@ jobs:
           if ! find /tmp/pkg -type f -size +100k | grep -q .; then
             /tmp/apkd -s rustore -p ru.yandex.yandexmaps -O /tmp/pkg >>/tmp/download.log 2>&1 || true
           fi
-          echo '=== DOWNLOAD ==='
-          tail -25 /tmp/download.log
-          find /tmp/pkg -type f -printf 'FILE %f %s bytes\n' | head -20
+          echo '=== PACKAGE ==='
+          grep -E 'ru\.yandex\.yandexmaps v|errors ' /tmp/download.log | tail -4 || true
+          find /tmp/pkg -type f -printf '%f %s bytes\n' | head -10
           rm -rf /tmp/unpack && mkdir /tmp/unpack
-          n=0
           while IFS= read -r -d '' f; do
-            n=$((n+1)); d="/tmp/unpack/$n"; mkdir -p "$d"
-            unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
+            d="/tmp/unpack/$(basename "$f")"; mkdir -p "$d"; unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
           done < <(find /tmp/pkg -type f -print0)
-          # Extract APKs contained in XAPK/APKM packages.
           while IFS= read -r -d '' apk; do
             d="${apk}.u"; mkdir -p "$d"; unzip -q "$apk" -d "$d" 2>/dev/null || true
           done < <(find /tmp/unpack -type f -name '*.apk' -print0)
+          echo '=== NATIVE LIBS ==='
+          find /tmp/unpack -type f -name '*.so' -printf '%f\n' | sort -u | head -80
           echo '=== COUNTS ==='
           echo "APK=$(find /tmp/unpack -type f -name '*.apk' | wc -l) DEX=$(find /tmp/unpack -type f -name 'classes*.dex' | wc -l) SO=$(find /tmp/unpack -type f -name '*.so' | wc -l)"
-          find /tmp/unpack -type f \( -name 'classes*.dex' -o -name '*.so' -o -name '*.arsc' \) -print0 | xargs -0 -r strings -a 2>/dev/null > /tmp/strings.txt
-          echo '=== YANDEX HOSTS/URLS ==='
-          grep -Eaio 'https?://[^[:space:]"<>]+|[A-Za-z0-9._-]+\.yandex\.(ru|net|com)' /tmp/strings.txt | \
-            grep -Eai 'traffic|event|jam|maps|route|comment|talk|user|ugc|fuel|station|queue|yandex' | \
-            sed 's/[),;].*$//' | sort -u | head -220
-          echo '=== EVENT KEY STRINGS ==='
-          grep -Eai 'traffic.?event|road.?event|map.?event|user.?event|conversation|razgov|talk|comment|ugc|trfe|mtrproxy|jams\.maps|event.?service|event.?layer|event.?feed' /tmp/strings.txt | sort -u | head -260
-          echo '=== FUEL/QUEUE STRINGS ==='
-          grep -Eai 'fuel.?availability|fuel.?station|gas.?station|petrol|refuel|queue|очеред|топлив|бензин|availability' /tmp/strings.txt | sort -u | head -180
+          find /tmp/unpack -type f \( -name 'classes*.dex' -o -name '*.so' -o -name '*.arsc' \) -print0 | xargs -0 -r strings -a 2>/dev/null > /tmp/s.txt
+          echo '=== ROAD EVENT TRANSPORT CANDIDATES ==='
+          grep -Eai 'road[_ /.-]?events?|roadevents|traffic[_ /.-]?events?|comments?(/|_|\.|$)|event[_ /.-]?(info|feed|entry|service)|ugcpub|ugc[_ /.-]|mtrproxy|trfe|jams\.maps|proxy\.mob\.maps|geointernal\.mob\.maps' /tmp/s.txt | \
+            grep -Eai 'https|/|host|url|endpoint|service|road|event|comment|ugc|proxy|feed|entry' | sort -u | head -350
+          echo '=== MAPS HOSTS NEAR EVENTS ==='
+          grep -Eaio 'https?://[^[:space:]"<>]+|[A-Za-z0-9._-]+\.(mob\.)?maps\.yandex\.(ru|net|com)|[A-Za-z0-9._-]+\.yandex\.(ru|net|com)' /tmp/s.txt | \
+            grep -Eai 'maps|event|road|ugc|proxy|geo|jam|traffic|comment' | sort -u | head -180
+          echo '=== API MODEL NAMES ==='
+          grep -Eai 'RoadEventsManager|RoadEventsLayer|requestEventInfo|addComment|FeedSession|EventInfoSession|RoadEventSession|EventTag|RoadEvent' /tmp/s.txt | sort -u | head -220
