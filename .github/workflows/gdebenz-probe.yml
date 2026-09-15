@@ -1,0 +1,64 @@
+name: GdeBenz Live Data Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gdebenz-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm i playwright@latest >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+      - name: Probe GdeBenz network
+        shell: bash
+        run: |
+          cat > probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+          const context = await browser.newContext({locale:'ru-RU',timezoneId:'Europe/Moscow',userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36',viewport:{width:1440,height:1000},geolocation:{latitude:59.877,longitude:30.444},permissions:['geolocation']});
+          const page=await context.newPage();
+          const seen=new Set(), hits=[];
+          page.on('response',async r=>{
+            try{
+              const req=r.request(),u=r.url(),rt=req.resourceType(),h=await r.allHeaders(),ct=h['content-type']||'';
+              if(seen.has(u)) return; seen.add(u);
+              if(!(rt==='xhr'||rt==='fetch'||/json|javascript/i.test(ct))) return;
+              let b=''; try{b=await r.text()}catch{}
+              const low=(u+' '+b.slice(0,20000)).toLowerCase();
+              if(/station|azs|fuel|benz|report|queue|limit|marker|supabase|firebase|api|graphql|availability|petrol|95|92|дт/.test(low)) hits.push({status:r.status(),rt,ct,url:u,body:b.slice(0,30000)});
+            }catch{}
+          });
+          await page.goto('https://gdebenz.ru/sankt-peterburg',{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForTimeout(12000);
+          console.log('TITLE',await page.title()); console.log('URL',page.url());
+          const body=await page.locator('body').innerText().catch(()=> '');
+          console.log('TEXT_HITS_BEGIN');
+          for(const x of body.split('\n').map(s=>s.trim()).filter(Boolean).filter(s=>/АЗС|топлив|бенз|очеред|92|95|ДТ|рядом|карта|лимит|отмет/i.test(s)).slice(0,180)) console.log(x);
+          console.log('TEXT_HITS_END');
+          // click obvious map/current-location controls if present
+          for(const label of ['Открыть карту','Карта','Найти рядом','Рядом со мной']){
+            const el=page.getByText(label,{exact:false}); if(await el.count().catch(()=>0)){await el.first().click({force:true}).catch(()=>{}); await page.waitForTimeout(5000);}
+          }
+          console.log('HITS',hits.length);
+          for(const x of hits){
+            console.log('---HIT---'); console.log(JSON.stringify({status:x.status,rt:x.rt,ct:x.ct,url:x.url}));
+            if(/json|text|javascript/i.test(x.ct)) console.log(x.body.replace(/\0/g,''));
+          }
+          console.log('SCRIPTS_BEGIN');
+          const srcs=await page.locator('script[src]').evaluateAll(es=>es.map(e=>e.src));
+          for(const s of srcs) console.log(s);
+          console.log('SCRIPTS_END');
+          await browser.close();
+          JS
+          node probe.mjs
