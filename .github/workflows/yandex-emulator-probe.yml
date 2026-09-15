@@ -1,0 +1,102 @@
+name: Yandex Emulator Road Events Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/yandex-emulator-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm || true
+
+      - name: Download current Yandex Maps bundle
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone -q https://github.com/kiber-io/apkdgo.git /tmp/apkdgo
+          cd /tmp/apkdgo
+          go build -o /tmp/apkd ./apkd
+          mkdir -p /tmp/yandexpkg
+          /tmp/apkd -s apkcombo -p ru.yandex.yandexmaps -O /tmp/yandexpkg -v
+          echo '=== downloaded ==='
+          find /tmp/yandexpkg -maxdepth 2 -type f -printf '%p %s\n'
+          rm -rf /tmp/yandexinstall && mkdir /tmp/yandexinstall
+          for f in /tmp/yandexpkg/*; do
+            [ -f "$f" ] || continue
+            unzip -q "$f" -d /tmp/yandexinstall 2>/dev/null || cp "$f" /tmp/yandexinstall/base.apk
+          done
+          echo '=== package APKs ==='
+          find /tmp/yandexinstall -maxdepth 2 -type f -name '*.apk' -printf '%p %s\n'
+
+      - name: Run app and capture road-events runtime logs
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            set +e
+            echo '=== emulator ==='
+            adb devices -l
+            adb shell settings put global window_animation_scale 0
+            adb shell settings put global transition_animation_scale 0
+            adb shell settings put global animator_duration_scale 0
+            adb shell setprop log.tag.YandexMaps VERBOSE || true
+            adb shell setprop log.tag.MapKit VERBOSE || true
+
+            echo '=== choose/install x86_64-compatible splits ==='
+            find /tmp/yandexinstall -type f -name '*.apk' -printf '%f %p\n' | sort
+            mapfile -t APKS < <(find /tmp/yandexinstall -type f -name '*.apk' | sort)
+            adb install-multiple -r "${APKS[@]}" || {
+              echo 'INSTALL_ALL_FAILED; inspect APK names and retry base + x86_64/no-abi configs'
+              BASE=$(find /tmp/yandexinstall -type f -name '*.apk' | grep -Ei '/(base|ru\.yandex\.yandexmaps).*\.apk$' | head -1)
+              mapfile -t SEL < <(find /tmp/yandexinstall -type f -name '*.apk' | grep -Evi 'arm64|armeabi' | sort)
+              echo "BASE=$BASE"; printf '%s\n' "${SEL[@]}"
+              adb install-multiple -r "${SEL[@]}" || true
+            }
+            adb shell pm path ru.yandex.yandexmaps || true
+
+            echo '=== set Saint Petersburg location ==='
+            adb emu geo fix 30.468924 59.860649 || true
+            adb logcat -c
+
+            echo '=== launch Yandex Maps at Lomonosovskaya with traffic/events layer hint ==='
+            adb shell am force-stop ru.yandex.yandexmaps
+            adb shell am start -W -a android.intent.action.VIEW -d 'yandexmaps://maps.yandex.ru/?ll=30.468924%2C59.860649&z=16&l=map%2Ctrf%2Ctrfe' ru.yandex.yandexmaps || \
+              adb shell monkey -p ru.yandex.yandexmaps 1
+            sleep 20
+
+            echo '=== dismiss common first-run dialogs by tapping buttons when present ==='
+            for i in 1 2 3 4; do
+              adb shell uiautomator dump /sdcard/window.xml >/dev/null 2>&1 || true
+              adb pull /sdcard/window.xml /tmp/window.xml >/dev/null 2>&1 || true
+              grep -Eo 'text="[^"]+"|content-desc="[^"]+"' /tmp/window.xml 2>/dev/null | head -100 || true
+              # common agree/continue/not now positions; safe UI taps only
+              adb shell input tap 540 1700 || true
+              sleep 3
+            done
+
+            echo '=== relaunch deep link after first-run ==='
+            adb shell am start -W -a android.intent.action.VIEW -d 'yandexmaps://maps.yandex.ru/?ll=30.468924%2C59.860649&z=16&l=map%2Ctrf%2Ctrfe' ru.yandex.yandexmaps || true
+            sleep 30
+
+            echo '=== ROAD EVENT / NETWORK LOG HITS ==='
+            adb logcat -d -v threadtime > /tmp/yandex-logcat.txt
+            grep -Eai 'Road events layer url|road.?events|comments/list|comments/add|events/get|user_events|infopoint|proxy\.mob\.maps\.yandex|Feed not found|Couldn.t decode RoadEvents|MAPS_CONFIG|mapkit2' /tmp/yandex-logcat.txt | tail -2000 || true
+
+            echo '=== WINDOW STATE ==='
+            adb shell uiautomator dump /sdcard/window.xml >/dev/null 2>&1 || true
+            adb pull /sdcard/window.xml /tmp/window-final.xml >/dev/null 2>&1 || true
+            head -c 30000 /tmp/window-final.xml 2>/dev/null || true
