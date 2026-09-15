@@ -1,0 +1,59 @@
+name: GdeBenz Network Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/gdebenz-network-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Capture GdeBenz live requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/gdeprobe && cd /tmp/gdeprobe
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+          cat > probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true});
+          const context=await browser.newContext({
+            locale:'ru-RU',timezoneId:'Europe/Moscow',
+            geolocation:{latitude:59.8775,longitude:30.4390},permissions:['geolocation'],
+            viewport:{width:1280,height:900},
+            userAgent:'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36'
+          });
+          const page=await context.newPage();
+          const seen=new Set();
+          page.on('response',async r=>{
+            try{
+              const req=r.request(); if(!['xhr','fetch'].includes(req.resourceType())) return;
+              const u=r.url(); if(seen.has(u))return; seen.add(u);
+              console.log('XHR',r.status(),req.method(),u);
+              const ct=(r.headers()['content-type']||'').toLowerCase();
+              if(ct.includes('json')||ct.includes('text')){
+                const t=(await r.text()).slice(0,30000);
+                if(/fuel|station|gas|petrol|queue|limit|available|confidence|report|lat|lon|АЗС|бенз|топлив|очеред|лимит|отмет/i.test(t)){
+                  console.log('MATCH_BEGIN',u); console.log(t.slice(0,18000)); console.log('MATCH_END');
+                }
+              }
+            }catch(e){}
+          });
+          await page.goto('https://gdebenz.ru/sankt-peterburg',{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForTimeout(12000);
+          console.log('TITLE',await page.title());
+          const body=(await page.locator('body').innerText()).slice(0,60000);
+          console.log('BODY_MATCHES');
+          for(const line of body.split('\n').map(s=>s.trim()).filter(Boolean)){
+            if(/АЗС|бенз|топлив|очеред|лимит|отмет|92|95|98|100|дизел/i.test(line)) console.log(line.slice(0,1000));
+          }
+          console.log('=== XHR_URLS ==='); for(const u of seen)console.log(u);
+          await browser.close();
+          JS
+          node probe.mjs
