@@ -1,0 +1,77 @@
+name: 2GIS Fuel Network Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/2gis-fuel-network-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Capture 2GIS live fuel requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/fuelprobe && cd /tmp/fuelprobe
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0 >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+          cat > probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser = await chromium.launch({headless:true});
+          const context = await browser.newContext({
+            locale:'ru-RU', timezoneId:'Europe/Moscow',
+            geolocation:{latitude:59.860565,longitude:30.468925},
+            permissions:['geolocation'],
+            viewport:{width:1280,height:900},
+            userAgent:'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36'
+          });
+          const page = await context.newPage();
+          const seen = new Set();
+          page.on('response', async (r) => {
+            try {
+              const req = r.request();
+              const type = req.resourceType();
+              if (!['xhr','fetch'].includes(type)) return;
+              const u = r.url();
+              if (seen.has(u)) return; seen.add(u);
+              console.log('XHR', r.status(), req.method(), u);
+              const ct=(r.headers()['content-type']||'').toLowerCase();
+              if (ct.includes('json') || ct.includes('text')) {
+                const txt=(await r.text()).slice(0,20000);
+                if (/fuel|gasoline|petrol|queue|limit|availability|status|АЗС|топлив|очеред|лимит/i.test(txt)) {
+                  console.log('MATCH_BEGIN',u);
+                  console.log(txt.slice(0,12000));
+                  console.log('MATCH_END');
+                }
+              }
+            } catch(e) {}
+          });
+          await page.goto('https://2gis.ru/spb/firm/5348552838608493',{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForTimeout(6000);
+          console.log('TITLE', await page.title());
+          const body0=(await page.locator('body').innerText()).slice(0,40000);
+          console.log('HAS_STATUS_TAB', body0.includes('Статус АЗС'));
+          const tab=page.getByText('Статус АЗС',{exact:true}).first();
+          console.log('TAB_COUNT', await tab.count());
+          if (await tab.count()) {
+            await tab.click({timeout:15000});
+            await page.waitForTimeout(10000);
+          }
+          const body=(await page.locator('body').innerText()).slice(0,60000);
+          const lines=body.split('\n').map(s=>s.trim()).filter(Boolean);
+          console.log('=== STATUS_TEXT ===');
+          for (let i=0;i<lines.length;i++) {
+            if (/Статус АЗС|топлив|АИ-|АИ |92|95|98|100|очеред|лимит|огранич|обновл|есть|нет топлива|возможно/i.test(lines[i])) {
+              console.log(lines.slice(Math.max(0,i-2),Math.min(lines.length,i+5)).join(' | '));
+            }
+          }
+          console.log('=== XHR_URLS ===');
+          for (const u of [...seen]) console.log(u);
+          await browser.close();
+          JS
+          node probe.mjs
