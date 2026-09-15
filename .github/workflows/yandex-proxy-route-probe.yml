@@ -1,0 +1,56 @@
+name: Yandex Proxy Route Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/yandex-proxy-route-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Probe likely read-only road-events proxy routes
+        shell: bash
+        run: |
+          set -u
+          set +o pipefail
+          BASE='https://proxy.mob.maps.yandex.net'
+          ID='__fuel_probe_nonexistent__'
+          prefixes=(
+            ''
+            '/mapkit2'
+            '/mapkit2/road_events'
+            '/mapkit2/road-events'
+            '/mapkit2/infopoints'
+            '/mapkit2/infopoint'
+            '/mapkit2/road_events/2.x'
+            '/mapkit2/infopoints/2.x'
+            '/v1'
+            '/v1/road_events'
+            '/v1/infopoints'
+            '/road_events'
+            '/road-events'
+            '/infopoints'
+            '/infopoint'
+            '/mapkit'
+            '/mapkit/road_events'
+            '/mapkit/infopoints'
+          )
+          echo 'prefix|endpoint|http|ctype|bytes|location|first_body'
+          for p in "${prefixes[@]}"; do
+            for ep in "events/get?id=$ID" "comments/list?event_id=$ID"; do
+              u="$BASE$p/$ep"
+              rm -f /tmp/h /tmp/b
+              code=$(curl --connect-timeout 5 --max-time 10 -sS -D /tmp/h -o /tmp/b -w '%{http_code}' \
+                -A 'Mozilla/5.0 (Linux; Android 16) YandexMaps/30.8.1' \
+                -H 'Accept: application/x-protobuf, application/json, */*' "$u" || echo ERR)
+              ct=$(awk 'BEGIN{IGNORECASE=1}/^content-type:/{sub(/\r$/,"",$0);print substr($0,index($0,":")+2)}' /tmp/h 2>/dev/null | tail -1)
+              loc=$(awk 'BEGIN{IGNORECASE=1}/^location:/{sub(/\r$/,"",$0);print substr($0,index($0,":")+2)}' /tmp/h 2>/dev/null | tail -1)
+              n=$(wc -c </tmp/b 2>/dev/null || echo 0)
+              body=$(head -c 180 /tmp/b 2>/dev/null | tr '\n\r|' '   ' | sed 's/[[:cntrl:]]/./g')
+              printf '%s|%s|%s|%s|%s|%s|%s\n' "$p" "$ep" "$code" "$ct" "$n" "$loc" "$body"
+            done
+          done
