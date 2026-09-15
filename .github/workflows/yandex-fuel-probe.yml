@@ -23,7 +23,7 @@ jobs:
       - name: Probe 2GIS live fuel status network
         shell: bash
         run: |
-          cat > /tmp/probe.mjs <<'JS'
+          cat > probe.mjs <<'JS'
           import { chromium } from 'playwright';
           const browser = await chromium.launch({headless:true, args:['--no-sandbox','--disable-dev-shm-usage']});
           const context = await browser.newContext({locale:'ru-RU', timezoneId:'Europe/Moscow', userAgent:'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', viewport:{width:1440,height:1000}});
@@ -56,4 +56,4 @@ jobs:
           for(const x of logs){ console.log('---RESP---'); console.log(JSON.stringify({status:x.status,ct:x.ct,rt:x.rt,url:x.url})); console.log(x.body.replace(/\0/g,'')); }
           await browser.close();
           JS
-          node /tmp/probe.mjs
+          node probe.mjs
