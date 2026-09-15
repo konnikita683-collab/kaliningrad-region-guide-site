@@ -10,38 +10,34 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
-      - name: Download current Yandex Maps package and inspect endpoint strings
+      - name: Download Yandex Maps from RuStore and inspect strings
         shell: bash
         run: |
           set -u
-          URL='https://d.apkpure.com/b/XAPK/ru.yandex.yandexmaps?version=latest'
-          echo "Testing $URL"
-          HTTP_CODE=$(curl -L --max-time 300 --retry 2 -sS \
-            -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/152 Safari/537.36' \
-            -D headers.txt -o app.xapk -w '%{http_code}' "$URL" || true)
-          echo "HTTP_CODE=$HTTP_CODE"
-          echo "SIZE=$(wc -c < app.xapk 2>/dev/null || echo 0)"
-          grep -iE '^(content-type|content-length|location):' headers.txt | tail -20 || true
-          file app.xapk || true
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo 'DOWNLOAD_FAILED'
-            head -c 1000 app.xapk || true
-            exit 0
-          fi
+          git clone -q https://github.com/avoidcode/rustoredl.git /tmp/rustoredl
+          python3 -m pip install -q /tmp/rustoredl
+          mkdir -p /tmp/yandexpkg && cd /tmp/yandexpkg
+          echo '--- RUSTORE DOWNLOAD ---'
+          rustoredl download -p ru.yandex.yandexmaps || true
+          echo '--- DOWNLOADED FILES ---'
+          ls -lah
           rm -rf unpack && mkdir unpack
-          unzip -q app.xapk -d unpack || cp app.xapk unpack/base.apk
-          echo '--- PACKAGE FILES ---'
-          find unpack -maxdepth 2 -type f | head -100
-          echo '--- INTERESTING HOST/URL STRINGS ---'
-          find unpack -type f \( -name '*.apk' -o -name '*.dex' -o -name '*.so' -o -name '*.json' -o -name '*.txt' \) -print0 | \
-            xargs -0 -r strings -a 2>/dev/null | \
-            grep -Eai 'https?://[^[:space:]"<>]+|[a-z0-9.-]+\.yandex\.(ru|net|com)[^[:space:]"<>]*' | \
-            grep -Eai 'jam|traffic|event|talk|conversation|comment|fuel|petrol|gas|station|azs|refuel|availability|queue|trf|trfe' | \
-            sort -u | head -600 || true
-          echo '--- KEYWORD CONTEXT STRINGS ---'
-          find unpack -type f \( -name '*.apk' -o -name '*.dex' -o -name '*.so' \) -print0 | \
-            xargs -0 -r strings -a 2>/dev/null | \
-            grep -Eai 'traffic.?event|road.?event|conversation|razgov|разговор|fuel.?availability|fuel.?station|gas.?station|refuel|petrol|очеред|топлив|бензин|trfe|mtrproxy' | \
-            sort -u | head -800 || true
+          for f in ru.yandex.yandexmaps.*; do
+            [ -f "$f" ] || continue
+            d="unpack/$(basename "$f")"; mkdir -p "$d"
+            unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
+            find "$d" -type f -name '*.apk' -print0 | while IFS= read -r -d '' apk; do
+              ad="${apk}.dir"; mkdir -p "$ad"; unzip -q "$apk" -d "$ad" 2>/dev/null || true
+            done
+          done
+          echo '--- INTERESTING URLS ---'
+          find unpack -type f -print0 | xargs -0 -r strings -a 2>/dev/null | \
+            grep -Eaio 'https?://[^[:space:]"<>]+' | \
+            grep -Eai 'yandex|traffic|event|fuel|petrol|gas|station|refuel|queue|jam|trf|trfe|conversation|comment|talk' | \
+            sort -u | head -1200 || true
+          echo '--- KEYWORD STRINGS ---'
+          find unpack -type f -print0 | xargs -0 -r strings -a 2>/dev/null | \
+            grep -Eai 'traffic.?event|road.?event|conversation|razgov|fuel.?availability|fuel.?station|gas.?station|refuel|petrol|queue|trfe|mtrproxy|jams\.maps|availability' | \
+            sort -u | head -1800 || true
