@@ -12,29 +12,80 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Inspect official MapKit 4.42.0 full AAR
+      - name: Trace x86_64 road-events endpoint request builders
         shell: bash
         run: |
           set -u
           set +o pipefail
           URL='https://repo1.maven.org/maven2/com/yandex/android/maps.mobile/4.42.0-full/maps.mobile-4.42.0-full.aar'
           curl -L --fail --retry 3 -o /tmp/mapkit.aar "$URL"
-          echo "AAR_BYTES=$(wc -c </tmp/mapkit.aar)"
-          rm -rf /tmp/mk && mkdir /tmp/mk && cd /tmp/mk
-          unzip -q /tmp/mapkit.aar
-          echo '=== ROAD EVENT CLASSES ==='
-          jar tf classes.jar | grep -E 'com/yandex/mapkit/(road_events|road_events_layer)/' | sort | head -300
-          echo '=== RoadEventsManager API ==='
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events.RoadEventsManager || true
-          echo '=== Feed / FeedSession / Entry ==='
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events.Feed || true
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events.FeedSession || true
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events.Entry || true
-          echo '=== RoadEventsLayer / RoadEvent ==='
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEventsLayer || true
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEvent || true
-          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEventsLayerListener || true
-          echo '=== MapKit creation API ==='
-          javap -classpath classes.jar -public com.yandex.mapkit.MapKit | grep -A4 -B4 -Ei 'RoadEvent|road_events' || true
-          echo '=== NATIVE READ ENDPOINT STRINGS ==='
-          find . -type f -name 'libmaps-mobile.so' -print -exec sh -c "strings -a -t x \"\$1\" | grep -Eai 'comments/list|events/get|infopoint|proxy\\.mob\\.maps\\.yandex|road.?events.*(url|host|path)' | head -800" _ {} \; || true
+          rm -rf /tmp/mk && mkdir /tmp/mk && cd /tmp/mk && unzip -q /tmp/mapkit.aar
+          LIB=/tmp/mk/jni/x86_64/libmaps-mobile.so
+          echo "LIB=$LIB SIZE=$(stat -c%s "$LIB")"
+
+          echo '=== SYMBOL TABLE MATCHES ==='
+          nm -anC "$LIB" 2>/dev/null | grep -Ei 'RoadEventsManagerImpl|requestEventInfo|comments\(|createRoadEventsRequestFactory|FeedSession|EventInfoSession' | head -400 || true
+          readelf -Ws "$LIB" 2>/dev/null | c++filt | grep -Ei 'RoadEventsManagerImpl|requestEventInfo|comments\(|createRoadEventsRequestFactory|FeedSession|EventInfoSession' | head -400 || true
+          objdump -T -C "$LIB" 2>/dev/null | grep -Ei 'RoadEventsManagerImpl|requestEventInfo|comments\(|createRoadEventsRequestFactory|FeedSession|EventInfoSession' | head -400 || true
+
+          python3 -m pip install -q pyelftools capstone
+          python3 - "$LIB" <<'PY'
+          import sys,re
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_X86, CS_MODE_64, x86_const
+          path=sys.argv[1]
+          raw=open(path,'rb').read()
+          needles=[b'comments/list',b'events/get',b'comments/add',b'/user_events',b'Road events layer url: ']
+          with open(path,'rb') as f:
+            elf=ELFFile(f)
+            text=elf.get_section_by_name('.text')
+            tdata=text.data(); tva=text['sh_addr']
+            loads=[]
+            for seg in elf.iter_segments():
+              if seg['p_type']=='PT_LOAD': loads.append((seg['p_offset'],seg['p_filesz'],seg['p_vaddr']))
+            def off2va(o):
+              for po,sz,va in loads:
+                if po<=o<po+sz: return va+(o-po)
+            targets={}
+            print('=== TARGET OFFSETS/VAS ===')
+            for n in needles:
+              arr=[]; p=0
+              while True:
+                o=raw.find(n,p)
+                if o<0: break
+                arr.append((o,off2va(o))); p=o+1
+              targets[n]=arr
+              print(n,[(hex(o),hex(v) if v is not None else None) for o,v in arr])
+            tmap={va:(n,o) for n,a in targets.items() for o,va in a if va is not None}
+            md=Cs(CS_ARCH_X86,CS_MODE_64); md.detail=True
+            ins=list(md.disasm(tdata,tva))
+            refs=[]
+            for idx,i in enumerate(ins):
+              for op in i.operands:
+                if op.type==x86_const.X86_OP_MEM and op.mem.base==x86_const.X86_REG_RIP:
+                  target=i.address+i.size+op.mem.disp
+                  if target in tmap:
+                    refs.append((idx,target,'ripmem'))
+                elif op.type==x86_const.X86_OP_IMM and op.imm in tmap:
+                  refs.append((idx,op.imm,'imm'))
+            print('\n=== EXACT CODE XREFS ===')
+            for idx,target,kind in refs:
+              n,o=tmap[target]
+              print(f'\nTARGET={n!r} file={o:#x} va={target:#x} kind={kind} insn={ins[idx].address:#x}')
+              for j in range(max(0,idx-70),min(len(ins),idx+100)):
+                q=ins[j]; mark='>>' if j==idx else '  '
+                print(f'{mark}{q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
+
+            # Find nearby ASCII strings around each endpoint and code references to useful parameter names.
+            print('\n=== PARAMETER-LIKE STRINGS NEAR ENDPOINTS ===')
+            for n,arr in targets.items():
+              for o,va in arr:
+                print('\n--',n,'--')
+                lo=max(0,o-12000); hi=min(len(raw),o+12000)
+                ss=[]
+                for m in re.finditer(rb'[ -~]{2,}',raw[lo:hi]):
+                  s=m.group().decode('utf-8','replace'); off=lo+m.start()
+                  if abs(off-o)<3000 or any(k in s.lower() for k in ['event_id','id=','comment','offset','limit','page','feed','lang','locale','uuid','clid','miid','user','auth','token','url','path','host','format','protobuf']):
+                    ss.append((off,s[:500]))
+                for off,s in ss[:300]: print(hex(off),s)
+          PY
