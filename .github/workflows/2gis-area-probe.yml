@@ -1,0 +1,39 @@
+name: 2GIS Fuel Area Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/2gis-area-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          npm init -y >/dev/null 2>&1
+          npm i playwright@latest >/dev/null 2>&1
+          npx playwright install chromium >/dev/null 2>&1
+      - shell: bash
+        run: |
+          cat > probe.mjs <<'JS'
+          import { chromium } from 'playwright';
+          const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+          const page=await browser.newPage({locale:'ru-RU',viewport:{width:1440,height:1000}});
+          const hits=[];
+          page.on('response',async r=>{try{const u=r.url();if(u.includes('benzin.api.2gis.ru')){let b='';try{b=await r.text()}catch{};hits.push({u,status:r.status(),b:b.slice(0,80000)});}}catch{}});
+          const url='https://2gis.ru/spb/search/%D0%90%D0%97%D0%A1?m=30.451587%2C59.868683%2F14';
+          await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
+          await page.waitForTimeout(15000);
+          const txt=await page.locator('body').innerText().catch(()=> '');
+          console.log('BODY_MATCHES');
+          for(const l of txt.split('\n').filter(x=>/Статус АЗС|Есть топливо|Возможно есть|Нет топлива|Очеред|АИ-92|АИ-95|АИ-98|АИ-100/.test(x)).slice(0,200))console.log(l);
+          console.log('API_HITS',hits.length);
+          for(const h of hits){console.log('---');console.log(h.status,h.u);console.log(h.b)}
+          await browser.close();
+          JS
+          node probe.mjs
