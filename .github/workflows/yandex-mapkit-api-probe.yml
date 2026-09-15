@@ -1,0 +1,40 @@
+name: Yandex MapKit API Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/yandex-mapkit-api-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Inspect official MapKit 4.42.0 full AAR
+        shell: bash
+        run: |
+          set -u
+          set +o pipefail
+          URL='https://repo1.maven.org/maven2/com/yandex/android/maps.mobile/4.42.0-full/maps.mobile-4.42.0-full.aar'
+          curl -L --fail --retry 3 -o /tmp/mapkit.aar "$URL"
+          echo "AAR_BYTES=$(wc -c </tmp/mapkit.aar)"
+          rm -rf /tmp/mk && mkdir /tmp/mk && cd /tmp/mk
+          unzip -q /tmp/mapkit.aar
+          echo '=== ROAD EVENT CLASSES ==='
+          jar tf classes.jar | grep -E 'com/yandex/mapkit/(road_events|road_events_layer)/' | sort | head -300
+          echo '=== RoadEventsManager API ==='
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events.RoadEventsManager || true
+          echo '=== Feed / FeedSession / Entry ==='
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events.Feed || true
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events.FeedSession || true
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events.Entry || true
+          echo '=== RoadEventsLayer / RoadEvent ==='
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEventsLayer || true
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEvent || true
+          javap -classpath classes.jar -public com.yandex.mapkit.road_events_layer.RoadEventsLayerListener || true
+          echo '=== MapKit creation API ==='
+          javap -classpath classes.jar -public com.yandex.mapkit.MapKit | grep -A4 -B4 -Ei 'RoadEvent|road_events' || true
+          echo '=== NATIVE READ ENDPOINT STRINGS ==='
+          find . -type f -name 'libmaps-mobile.so' -print -exec sh -c "strings -a -t x \"\$1\" | grep -Eai 'comments/list|events/get|infopoint|proxy\\.mob\\.maps\\.yandex|road.?events.*(url|host|path)' | head -800" _ {} \; || true
