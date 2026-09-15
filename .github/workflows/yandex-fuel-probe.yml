@@ -10,28 +10,38 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
-      - name: Query Yandex traffic events endpoint
+      - name: Download current Yandex Maps package and inspect endpoint strings
         shell: bash
         run: |
           set -u
-          NOW=$(date +%s)
-          URL="https://jams.maps.yandex.net/mtrproxy/trf/?lang=ru_RU&ll=30.468924%2C59.860649&z=16&l=trf%2Ctrfe&size=10%2C10&tm=${NOW}"
-          echo "URL=$URL"
-          HTTP_CODE=$(curl -L --max-time 30 -sS \
-            -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' \
-            -H 'Accept: application/json, text/javascript, */*; q=0.01' \
-            -H 'Accept-Language: ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7' \
-            -H 'Referer: https://yandex.ru/maps/' \
-            -D headers.txt \
-            -o body.txt \
-            -w '%{http_code}' \
-            "$URL" || true)
+          URL='https://d.apkpure.com/b/XAPK/ru.yandex.yandexmaps?version=latest'
+          echo "Testing $URL"
+          HTTP_CODE=$(curl -L --max-time 300 --retry 2 -sS \
+            -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/152 Safari/537.36' \
+            -D headers.txt -o app.xapk -w '%{http_code}' "$URL" || true)
           echo "HTTP_CODE=$HTTP_CODE"
-          echo '--- RESPONSE HEADERS ---'
-          cat headers.txt || true
-          echo '--- RESPONSE BODY (first 200k) ---'
-          head -c 200000 body.txt || true
-          echo
-          echo '--- END ---'
+          echo "SIZE=$(wc -c < app.xapk 2>/dev/null || echo 0)"
+          grep -iE '^(content-type|content-length|location):' headers.txt | tail -20 || true
+          file app.xapk || true
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo 'DOWNLOAD_FAILED'
+            head -c 1000 app.xapk || true
+            exit 0
+          fi
+          rm -rf unpack && mkdir unpack
+          unzip -q app.xapk -d unpack || cp app.xapk unpack/base.apk
+          echo '--- PACKAGE FILES ---'
+          find unpack -maxdepth 2 -type f | head -100
+          echo '--- INTERESTING HOST/URL STRINGS ---'
+          find unpack -type f \( -name '*.apk' -o -name '*.dex' -o -name '*.so' -o -name '*.json' -o -name '*.txt' \) -print0 | \
+            xargs -0 -r strings -a 2>/dev/null | \
+            grep -Eai 'https?://[^[:space:]"<>]+|[a-z0-9.-]+\.yandex\.(ru|net|com)[^[:space:]"<>]*' | \
+            grep -Eai 'jam|traffic|event|talk|conversation|comment|fuel|petrol|gas|station|azs|refuel|availability|queue|trf|trfe' | \
+            sort -u | head -600 || true
+          echo '--- KEYWORD CONTEXT STRINGS ---'
+          find unpack -type f \( -name '*.apk' -o -name '*.dex' -o -name '*.so' \) -print0 | \
+            xargs -0 -r strings -a 2>/dev/null | \
+            grep -Eai 'traffic.?event|road.?event|conversation|razgov|разговор|fuel.?availability|fuel.?station|gas.?station|refuel|petrol|очеред|топлив|бензин|trfe|mtrproxy' | \
+            sort -u | head -800 || true
