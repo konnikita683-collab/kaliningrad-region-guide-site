@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Trace Yandex road-events request construction
+      - name: Resolve AArch64 xrefs to Yandex road-event endpoints
         shell: bash
         run: |
           set -u
@@ -29,50 +29,96 @@ jobs:
             d="${apk}.u"; mkdir -p "$d"; unzip -q "$apk" -d "$d" 2>/dev/null || true
           done < <(find /tmp/unpack -type f -name '*.apk' -print0)
           LIB=$(find /tmp/unpack -type f -name 'libmaps-mobile.so' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
-          echo '=== PACKAGE / LIB ==='
-          grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
-          echo "$LIB"; ls -lh "$LIB"
-          strings -a -t x "$LIB" > /tmp/lm.txt
-
-          echo '=== EXACT PATH/HOST STRING OFFSETS ==='
-          grep -Ei '(/user_events|/feedback|/comments|/comment|/events|proxy\.mob\.maps\.yandex\.net|road_events)' /tmp/lm.txt | head -500 || true
-
-          echo '=== LOCAL STRING NEIGHBORHOODS ==='
+          echo '=== PACKAGE ==='; grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
+          echo "LIB=$LIB"
+          python3 -m pip install -q pyelftools capstone
           python3 - "$LIB" <<'PY'
-          import re, sys
-          p=sys.argv[1]
-          b=open(p,'rb').read()
-          needles=[b'/user_events',b'/feedback',b'/comments',b'proxy.mob.maps.yandex.net',b'RoadEventsManagerImpl',b'createRoadEventsRequestFactory']
-          for n in needles:
-              print('\n---',n.decode(errors='replace'),'---')
-              start=0
-              found=0
-              while True:
-                  i=b.find(n,start)
-                  if i<0: break
-                  found+=1
-                  lo=max(0,i-4096); hi=min(len(b),i+len(n)+4096)
-                  chunk=b[lo:hi]
-                  ss=[]
-                  for m in re.finditer(rb'[ -~]{4,}',chunk):
-                      s=m.group().decode('utf-8','replace')
-                      off=lo+m.start()
-                      if any(k.lower() in s.lower() for k in ['http','event','comment','feed','proxy','road','user_','feedback','request','response','url','path','host','auth','token','clid','uuid','locale','lang']):
-                          ss.append((off,s[:500]))
-                  print(f'offset=0x{i:x}')
-                  for off,s in ss[:160]: print(f'  0x{off:x} {s}')
-                  start=i+1
-                  if found>=5: break
+          import sys
+          from elftools.elf.elffile import ELFFile
+          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM, arm64_const
+
+          path=sys.argv[1]
+          needles=[b'comments/add',b'/user_events',b'/feedback',b'Feed not found at url: [',b'https://proxy.mob.maps.yandex.net:443']
+          with open(path,'rb') as f:
+              raw=f.read()
+          with open(path,'rb') as f:
+              elf=ELFFile(f)
+              text=elf.get_section_by_name('.text')
+              tdata=text.data(); tva=text['sh_addr']; toff=text['sh_offset']
+              loads=[]
+              for seg in elf.iter_segments():
+                  if seg['p_type']=='PT_LOAD':
+                      loads.append((seg['p_offset'],seg['p_filesz'],seg['p_vaddr']))
+              def off2va(off):
+                  for po,ps,pv in loads:
+                      if po <= off < po+ps: return pv+(off-po)
+                  return None
+              targets={}
+              print('=== TARGETS ===')
+              for n in needles:
+                  start=0; arr=[]
+                  while True:
+                      o=raw.find(n,start)
+                      if o<0: break
+                      va=off2va(o); arr.append((o,va)); start=o+1
+                  targets[n]=arr
+                  print(n.decode(errors='replace'),[(hex(o),hex(v) if v is not None else None) for o,v in arr])
+
+              md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=True
+              ins=list(md.disasm(tdata,tva))
+              target_by_va={v:(n,o) for n,arr in targets.items() for o,v in arr if v is not None}
+              pages={v & ~0xfff for v in target_by_va}
+              xrefs=[]
+              # Track adrp register for short windows; include ADR direct references.
+              reg_pages={}
+              reg_age={}
+              for idx,i in enumerate(ins):
+                  for r in list(reg_age):
+                      reg_age[r]+=1
+                      if reg_age[r]>12:
+                          reg_age.pop(r,None); reg_pages.pop(r,None)
+                  if i.mnemonic=='adr' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM:
+                      dest=i.operands[0].reg; val=i.operands[1].imm
+                      if val in target_by_va:
+                          xrefs.append((idx,val,'adr'))
+                  elif i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM:
+                      r=i.operands[0].reg; reg_pages[r]=i.operands[1].imm; reg_age[r]=0
+                  elif i.mnemonic=='add' and len(i.operands)>=3 and i.operands[1].type==arm64_const.ARM64_OP_REG and i.operands[2].type==arm64_const.ARM64_OP_IMM:
+                      src=i.operands[1].reg
+                      if src in reg_pages:
+                          val=reg_pages[src]+i.operands[2].imm
+                          if val in target_by_va:
+                              xrefs.append((idx,val,'adrp+add'))
+                  # clang often materializes string via adrp + ldr from GOT; print candidates whose adrp page is target page
+                  if i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM and i.operands[1].imm in pages:
+                      pass
+              print('\n=== EXACT XREFS ===')
+              for idx,val,kind in xrefs:
+                  n,o=target_by_va[val]
+                  print(f'\nTARGET {n!r} file={o:#x} va={val:#x} via={kind} at {ins[idx].address:#x}')
+                  for j in range(max(0,idx-25),min(len(ins),idx+35)):
+                      q=ins[j]; mark='>>' if j==idx else '  '
+                      print(f'{mark} {q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
+
+              # Broader page xrefs, useful when ADD is separated or pointer arithmetic occurs.
+              print('\n=== TARGET-PAGE ADRP WINDOWS ===')
+              shown=0
+              for idx,i in enumerate(ins):
+                  if i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM and i.operands[1].imm in pages:
+                      # only show windows containing an immediate low12 equal to target low12 in next 12 instructions
+                      page=i.operands[1].imm
+                      candidates=[v for v in target_by_va if (v & ~0xfff)==page]
+                      lows={v & 0xfff:v for v in candidates}
+                      hit=False
+                      for q in ins[idx:idx+13]:
+                          for op in getattr(q,'operands',[]):
+                              if op.type==arm64_const.ARM64_OP_IMM and op.imm in lows:
+                                  hit=True
+                      if hit and shown<100:
+                          print(f'\nADRP at {i.address:#x} {i.op_str} page={page:#x}')
+                          for q in ins[max(0,idx-8):min(len(ins),idx+18)]: print(f'  {q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
+                          shown+=1
           PY
 
-          echo '=== SYMBOLS ==='
-          (nm -C "$LIB" 2>/dev/null || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
-          (nm -D -C "$LIB" 2>/dev/null || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
-          (readelf -Ws "$LIB" 2>/dev/null | c++filt || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
-
-          echo '=== HTTP / REQUEST LOG STRINGS ==='
-          grep -Eai 'GET /|POST /|PUT /|DELETE /|request duration|HTTP/[0-9]|Content-Type|Authorization|X-[A-Za-z-]+|clid|uuid|device[_-]?id|session|token' /tmp/lm.txt | \
-            grep -Eai 'road|event|comment|user|feedback|proxy|mapkit|http|request|content|auth|clid|uuid|device|session|token' | head -500 || true
-
-          echo '=== PROTO / CONFIG FIELD-LIKE STRINGS ==='
-          grep -Ein -C 12 'mobile_config\.mapkit2\.roadevents\.Config|proto\.road_events\.(UserEvents|UserEvent|RoadEventMetadata|TextEntry|LayerRoadEventMetadata)' /tmp/lm.txt | head -600 || true
+          echo '=== RELATED STATIC STRINGS ==='
+          strings -a "$LIB" | grep -Eai 'comments|user_events|road[_ -]?events|event[_ -]?id|feed not found|feedback' | head -600 || true
