@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Inspect road-event endpoints and layer configuration
+      - name: Extract road-events mobile config fields
         shell: bash
         run: |
           set -u
@@ -31,39 +31,54 @@ jobs:
           LIB=$(find /tmp/unpack -type f -name 'libmaps-mobile.so' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
           echo '=== PACKAGE ==='; grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
           echo "LIB=$LIB"
+          strings -a -t x "$LIB" > /tmp/strings.txt
 
-          echo '=== ENDPOINT-LIKE STRINGS ==='
-          strings -a -t x "$LIB" | grep -Eai 'comments/(list|add)|/user_events|/feedback|road.?events.*url|url.*road.?events|roadevents.*url|proxy\.mob\.maps\.yandex\.net|event[_-]?id|comments_count' | head -1200 || true
+          echo '=== ROAD EVENTS CONFIG RELATED STRINGS ==='
+          grep -Eai 'roadevents|road_events|road events|user_events|user events|comments/list|comments/add|version_update|update_period|dynamic_version|fixed_version|url_template|tile_url|layer_url|event_id|comments_count' /tmp/strings.txt | head -2500 || true
 
-          echo '=== ASCII NEIGHBORHOODS ==='
+          echo '=== CONTEXT AROUND CONFIG TYPE / UPDATE PERIOD / URL LOG ==='
+          python3 - <<'PY'
+          import re
+          lines=open('/tmp/strings.txt',errors='replace').read().splitlines()
+          pats=[
+            r'mobile_config\.mapkit2\.roadevents\.Config',
+            r'Road events layer config', r'Road events layer url', r'user events update period',
+            r'comments/list', r'/user_events', r'road_events_layer_2_multizoom',
+            r'DynamicVersion', r'update_period'
+          ]
+          hits=[]
+          for i,l in enumerate(lines):
+            if any(re.search(p,l,re.I) for p in pats): hits.append(i)
+          seen=set()
+          for i in hits:
+            key=i//20
+            if key in seen: continue
+            seen.add(key)
+            print('\n--- context line',i,'---')
+            for x in lines[max(0,i-35):min(len(lines),i+36)]: print(x)
+          PY
+
+          echo '=== RAW ASCII NEAR CONFIG TYPE OCCURRENCES ==='
           python3 - "$LIB" <<'PY'
           import re,sys
           b=open(sys.argv[1],'rb').read()
-          needles=[b'comments/list',b'comments/add',b'/user_events',b'Road events layer url: ',b'https://proxy.mob.maps.yandex.net:443']
+          needles=[b'yandex.maps.proto.mobile_config.mapkit2.roadevents.Config',b'Road events layer config doesn',b'Road events layer url: ',b'comments/list']
           for n in needles:
-              print('\n###',n.decode(errors='replace'))
-              pos=0
-              while True:
-                  i=b.find(n,pos)
-                  if i<0: break
-                  lo=max(0,i-8192); hi=min(len(b),i+8192)
-                  arr=[]
-                  for m in re.finditer(rb'[\x20-\x7e]{3,}',b[lo:hi]):
-                      s=m.group().decode('utf-8','replace')
-                      off=lo+m.start()
-                      if abs(off-i)<2500 or any(x in s.lower() for x in ['comment','event','road','feed','http','url','proxy','user_','feedback','layer','version','tile','bbox','clid','lang','locale','zoom']):
-                          arr.append((off,s[:700]))
-                  print(f'offset=0x{i:x}')
-                  for off,s in arr[:260]: print(f'0x{off:x}\t{s}')
-                  pos=i+1
-
-          print('\n=== SLASH PATH CLUSTER AROUND ROAD EVENTS TU ===')
-          for m in re.finditer(rb'[\x20-\x7e]{3,}',b):
-              s=m.group().decode('utf-8','replace')
-              off=m.start()
-              if 0x545000 <= off <= 0x548000 and ('/' in s or 'url' in s.lower() or 'comment' in s.lower() or 'event' in s.lower() or 'feed' in s.lower()):
-                  print(f'0x{off:x}\t{s[:1000]}')
+            pos=0
+            while True:
+              i=b.find(n,pos)
+              if i<0: break
+              print(f'\n### {n!r} at 0x{i:x}')
+              lo=max(0,i-32768); hi=min(len(b),i+32768)
+              arr=[]
+              for m in re.finditer(rb'[\x20-\x7e]{2,}',b[lo:hi]):
+                s=m.group().decode('utf-8','replace')
+                off=lo+m.start()
+                if any(k in s.lower() for k in ['road','event','layer','url','version','update','period','user','comment','tile','zoom','config','host','feed','proxy']):
+                  arr.append((off,s[:900]))
+              for off,s in arr[:700]: print(f'0x{off:x}\t{s}')
+              pos=i+1
           PY
 
-          echo '=== CONFIG FIELD CANDIDATES ==='
-          strings -a "$LIB" | grep -Eai 'user.?events|road.?events|tile.?url|url.?template|dynamic.?version|update.?period|comments/(list|add)|feed' | head -1000 || true
+          echo '=== FIELD-LIKE WORDS NEAR PROTO DESCRIPTORS ==='
+          strings -a "$LIB" | grep -E '^(url|url_template|layer_url|version|fixed|dynamic|update_period|user_events_update_period|version_update_period|zoom|min_zoom|max_zoom|tile|tiles|host|path|feed|comments|event_id|comments_count)$' | sort -u || true
