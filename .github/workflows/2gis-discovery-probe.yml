@@ -12,24 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Probe catalog and fuel endpoints
+      - name: Discover fuel station list parameters
         shell: bash
         run: |
-          set -euo pipefail
-          KEY='c7f1a769-c8a5-4636-b14d-d8c987808a12'
-          echo '=== CATALOG SEARCH ==='
-          curl -fsSLG 'https://catalog.api.2gis.com/3.0/items' \
-            --data-urlencode 'q=АЗС' --data-urlencode 'type=branch' \
-            --data-urlencode 'point=30.4390,59.8775' --data-urlencode 'radius=15000' \
-            --data-urlencode 'page_size=50' --data-urlencode "key=$KEY" \
-            --data-urlencode 'fields=items.point,items.address_name,items.name,items.rubrics' | python -m json.tool | head -1200 || true
-          echo '=== BENZIN CANDIDATES ==='
-          for u in \
-            'https://benzin.api.2gis.ru/api/v1/stations?lat=59.8775&lng=30.4390&radius=15000' \
-            'https://benzin.api.2gis.ru/api/v1/stations?region_id=38' \
-            'https://benzin.api.2gis.ru/api/v1/stations?bbox=30.20,59.70,30.70,60.05' \
-            'https://benzin.api.2gis.ru/api/v1/stations?bounds=30.20,59.70,30.70,60.05' \
-            'https://benzin.api.2gis.ru/api/v1/stations?limit=10&offset=0'; do
-              echo URL:$u
-              curl -sS -w '\nHTTP:%{http_code}\n' "$u" | head -120 || true
+          set -u
+          base='https://benzin.api.2gis.ru/api/v1/stations'
+          tests=(
+            'min_lat=59.70&max_lat=60.05&min_lng=30.20&max_lng=30.70'
+            'minLat=59.70&maxLat=60.05&minLng=30.20&maxLng=30.70'
+            'min_lat=59.70&max_lat=60.05&min_lon=30.20&max_lon=30.70'
+            'minLat=59.70&maxLat=60.05&minLon=30.20&maxLon=30.70'
+            'min_lat=59.70&max_lat=60.05&min_long=30.20&max_long=30.70'
+            'south=59.70&north=60.05&west=30.20&east=30.70'
+          )
+          for q in "${tests[@]}"; do
+            echo "=== $q ==="
+            curl -sS -w '\nHTTP:%{http_code}\n' "$base?$q" | head -80
           done
+          echo '=== BY IDS MULTI ==='
+          curl -sS -w '\nHTTP:%{http_code}\n' 'https://benzin.api.2gis.ru/api/v1/stations/by-ids?ids=5348552838608493,70000001031621554' | head -160
