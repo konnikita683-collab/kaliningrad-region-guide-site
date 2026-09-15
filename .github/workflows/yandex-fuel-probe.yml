@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
-      - name: Download Yandex Maps with current apkdgo and inspect strings
+      - name: Download Yandex Maps and inspect endpoint strings
         shell: bash
         run: |
           set -u
@@ -20,25 +20,29 @@ jobs:
           cd /tmp/apkdgo
           go build -o /tmp/apkd ./apkd
           mkdir -p /tmp/yandexpkg
-          echo '--- APKD DOWNLOAD ---'
-          /tmp/apkd -s rustore -p ru.yandex.yandexmaps -O /tmp/yandexpkg -vv || true
+          echo '--- APKCOMBO DOWNLOAD ---'
+          /tmp/apkd -s apkcombo -p ru.yandex.yandexmaps -O /tmp/yandexpkg -vv || true
+          if ! find /tmp/yandexpkg -type f -size +100k | grep -q .; then
+            echo '--- APKCOMBO EMPTY; TRY RUSTORE ---'
+            /tmp/apkd -s rustore -p ru.yandex.yandexmaps -O /tmp/yandexpkg -vv || true
+          fi
           echo '--- DOWNLOADED FILES ---'
-          find /tmp/yandexpkg -maxdepth 2 -type f -printf '%p %s bytes\n' | head -100
+          find /tmp/yandexpkg -maxdepth 3 -type f -printf '%p %s bytes\n' | head -100
           rm -rf /tmp/yunpack && mkdir /tmp/yunpack
-          i=0
-          find /tmp/yandexpkg -type f -print0 | while IFS= read -r -d '' f; do
-            i=$((i+1)); d="/tmp/yunpack/p$i"; mkdir -p "$d"
+          n=0
+          while IFS= read -r -d '' f; do
+            n=$((n+1)); d="/tmp/yunpack/p$n"; mkdir -p "$d"
             unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
-            find "$d" -type f -name '*.apk' -print0 | while IFS= read -r -d '' apk; do
+            while IFS= read -r -d '' apk; do
               ad="${apk}.dir"; mkdir -p "$ad"; unzip -q "$apk" -d "$ad" 2>/dev/null || true
-            done
-          done
+            done < <(find "$d" -type f -name '*.apk' -print0)
+          done < <(find /tmp/yandexpkg -type f -print0)
           echo '--- INTERESTING URLS ---'
           find /tmp/yunpack -type f -print0 | xargs -0 -r strings -a 2>/dev/null | \
             grep -Eaio 'https?://[^[:space:]"<>]+' | \
             grep -Eai 'yandex|traffic|event|fuel|petrol|gas|station|refuel|queue|jam|trf|trfe|conversation|comment|talk' | \
-            sort -u | head -1500 || true
+            sort -u | head -1800 || true
           echo '--- KEYWORD STRINGS ---'
           find /tmp/yunpack -type f -print0 | xargs -0 -r strings -a 2>/dev/null | \
-            grep -Eai 'traffic.?event|road.?event|conversation|razgov|fuel.?availability|fuel.?station|gas.?station|refuel|petrol|queue|trfe|mtrproxy|jams\.maps|availability' | \
-            sort -u | head -2200 || true
+            grep -Eai 'traffic.?event|road.?event|conversation|razgov|fuel.?availability|fuel.?station|gas.?station|refuel|petrol|queue|trfe|mtrproxy|jams\.maps|availability|talk|comment' | \
+            sort -u | head -2600 || true
