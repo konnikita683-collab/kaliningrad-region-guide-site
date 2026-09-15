@@ -12,15 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Extract road-events mobile config fields
+      - name: Probe documented read-only infopoints endpoints
         shell: bash
         run: |
           set -u
           set +o pipefail
+          echo '=== DNS ==='
+          getent ahosts infopoints.maps.yandex.net || true
+          getent ahosts proxy.mob.maps.yandex.net || true
+
+          echo '=== READ-ONLY HTTP PROBES WITH NONEXISTENT IDS ==='
+          for u in \
+            'https://infopoints.maps.yandex.net/events/get?id=__fuel_probe_nonexistent__' \
+            'https://infopoints.maps.yandex.net/comments/list?event_id=__fuel_probe_nonexistent__' \
+            'http://infopoints.maps.yandex.net/events/get?id=__fuel_probe_nonexistent__' \
+            'http://infopoints.maps.yandex.net/comments/list?event_id=__fuel_probe_nonexistent__'; do
+            echo "--- $u"
+            curl -L --max-time 20 -sS -D /tmp/h -o /tmp/b -w 'HTTP=%{http_code} IP=%{remote_ip} URL=%{url_effective}\n' \
+              -A 'Mozilla/5.0 (Linux; Android 16) YandexMaps/30.8.1' \
+              -H 'Accept: */*' "$u" || true
+            sed -n '1,30p' /tmp/h || true
+            echo 'BODY:'; head -c 3000 /tmp/b || true; echo
+          done
+
+          echo '=== DOWNLOAD CURRENT YANDEX MAPS ==='
           git clone -q https://github.com/kiber-io/apkdgo.git /tmp/apkdgo
           cd /tmp/apkdgo && go build -o /tmp/apkd ./apkd
           mkdir -p /tmp/pkg
           /tmp/apkd -s apkcombo -p ru.yandex.yandexmaps -O /tmp/pkg >/tmp/download.log 2>&1 || true
+          grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
           rm -rf /tmp/unpack && mkdir /tmp/unpack
           while IFS= read -r -d '' f; do
             d="/tmp/unpack/$(basename "$f")"; mkdir -p "$d"; unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
@@ -29,56 +49,26 @@ jobs:
             d="${apk}.u"; mkdir -p "$d"; unzip -q "$apk" -d "$d" 2>/dev/null || true
           done < <(find /tmp/unpack -type f -name '*.apk' -print0)
           LIB=$(find /tmp/unpack -type f -name 'libmaps-mobile.so' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
-          echo '=== PACKAGE ==='; grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
           echo "LIB=$LIB"
-          strings -a -t x "$LIB" > /tmp/strings.txt
 
-          echo '=== ROAD EVENTS CONFIG RELATED STRINGS ==='
-          grep -Eai 'roadevents|road_events|road events|user_events|user events|comments/list|comments/add|version_update|update_period|dynamic_version|fixed_version|url_template|tile_url|layer_url|event_id|comments_count' /tmp/strings.txt | head -2500 || true
+          echo '=== ALL INFOPOINT/ROAD-EVENT HOST/PATH STRINGS ==='
+          strings -a -t x "$LIB" | grep -Eai 'infopoint|comments/list|comments/add|events/get|events/list|/user_events|proxy\.mob\.maps\.yandex|jams.*yandex|road.?events.*(host|url|path)|/(road|event|comment)[a-z0-9_./?-]*' | head -2500 || true
 
-          echo '=== CONTEXT AROUND CONFIG TYPE / UPDATE PERIOD / URL LOG ==='
-          python3 - <<'PY'
-          import re
-          lines=open('/tmp/strings.txt',errors='replace').read().splitlines()
-          pats=[
-            r'mobile_config\.mapkit2\.roadevents\.Config',
-            r'Road events layer config', r'Road events layer url', r'user events update period',
-            r'comments/list', r'/user_events', r'road_events_layer_2_multizoom',
-            r'DynamicVersion', r'update_period'
-          ]
-          hits=[]
-          for i,l in enumerate(lines):
-            if any(re.search(p,l,re.I) for p in pats): hits.append(i)
-          seen=set()
-          for i in hits:
-            key=i//20
-            if key in seen: continue
-            seen.add(key)
-            print('\n--- context line',i,'---')
-            for x in lines[max(0,i-35):min(len(lines),i+36)]: print(x)
-          PY
-
-          echo '=== RAW ASCII NEAR CONFIG TYPE OCCURRENCES ==='
+          echo '=== NEIGHBORHOODS OF READ ENDPOINTS ==='
           python3 - "$LIB" <<'PY'
           import re,sys
           b=open(sys.argv[1],'rb').read()
-          needles=[b'yandex.maps.proto.mobile_config.mapkit2.roadevents.Config',b'Road events layer config doesn',b'Road events layer url: ',b'comments/list']
-          for n in needles:
-            pos=0
+          for n in [b'comments/list',b'events/get',b'events/list',b'infopoints.maps.yandex.net',b'proxy.mob.maps.yandex.net']:
+            print('\n###',n.decode(errors='replace'))
+            p=0
             while True:
-              i=b.find(n,pos)
+              i=b.find(n,p)
               if i<0: break
-              print(f'\n### {n!r} at 0x{i:x}')
-              lo=max(0,i-32768); hi=min(len(b),i+32768)
-              arr=[]
-              for m in re.finditer(rb'[\x20-\x7e]{2,}',b[lo:hi]):
-                s=m.group().decode('utf-8','replace')
-                off=lo+m.start()
-                if any(k in s.lower() for k in ['road','event','layer','url','version','update','period','user','comment','tile','zoom','config','host','feed','proxy']):
-                  arr.append((off,s[:900]))
-              for off,s in arr[:700]: print(f'0x{off:x}\t{s}')
-              pos=i+1
+              print('offset',hex(i))
+              lo=max(0,i-6000); hi=min(len(b),i+6000)
+              for m in re.finditer(rb'[\x20-\x7e]{3,}',b[lo:hi]):
+                s=m.group().decode('utf-8','replace'); off=lo+m.start()
+                if abs(off-i)<1800 or any(k in s.lower() for k in ['http','host','path','proxy','event','comment','feed','url','clid','uuid','lang','locale','infopoint']):
+                  print(hex(off),s[:600])
+              p=i+1
           PY
-
-          echo '=== FIELD-LIKE WORDS NEAR PROTO DESCRIPTORS ==='
-          strings -a "$LIB" | grep -E '^(url|url_template|layer_url|version|fixed|dynamic|update_period|user_events_update_period|version_update_period|zoom|min_zoom|max_zoom|tile|tiles|host|path|feed|comments|event_id|comments_count)$' | sort -u || true
