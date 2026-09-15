@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
-      - name: Target Yandex road-event transport strings
+      - name: Inspect libmaps-mobile road-event transport context
         shell: bash
         run: |
           set -u
@@ -21,12 +21,6 @@ jobs:
           cd /tmp/apkdgo && go build -o /tmp/apkd ./apkd
           mkdir -p /tmp/pkg
           /tmp/apkd -s apkcombo -p ru.yandex.yandexmaps -O /tmp/pkg >/tmp/download.log 2>&1 || true
-          if ! find /tmp/pkg -type f -size +100k | grep -q .; then
-            /tmp/apkd -s rustore -p ru.yandex.yandexmaps -O /tmp/pkg >>/tmp/download.log 2>&1 || true
-          fi
-          echo '=== PACKAGE ==='
-          grep -E 'ru\.yandex\.yandexmaps v|errors ' /tmp/download.log | tail -4 || true
-          find /tmp/pkg -type f -printf '%f %s bytes\n' | head -10
           rm -rf /tmp/unpack && mkdir /tmp/unpack
           while IFS= read -r -d '' f; do
             d="/tmp/unpack/$(basename "$f")"; mkdir -p "$d"; unzip -q "$f" -d "$d" 2>/dev/null || cp "$f" "$d/base.apk"
@@ -34,16 +28,18 @@ jobs:
           while IFS= read -r -d '' apk; do
             d="${apk}.u"; mkdir -p "$d"; unzip -q "$apk" -d "$d" 2>/dev/null || true
           done < <(find /tmp/unpack -type f -name '*.apk' -print0)
-          echo '=== NATIVE LIBS ==='
-          find /tmp/unpack -type f -name '*.so' -printf '%f\n' | sort -u | head -80
-          echo '=== COUNTS ==='
-          echo "APK=$(find /tmp/unpack -type f -name '*.apk' | wc -l) DEX=$(find /tmp/unpack -type f -name 'classes*.dex' | wc -l) SO=$(find /tmp/unpack -type f -name '*.so' | wc -l)"
-          find /tmp/unpack -type f \( -name 'classes*.dex' -o -name '*.so' -o -name '*.arsc' \) -print0 | xargs -0 -r strings -a 2>/dev/null > /tmp/s.txt
-          echo '=== ROAD EVENT TRANSPORT CANDIDATES ==='
-          grep -Eai 'road[_ /.-]?events?|roadevents|traffic[_ /.-]?events?|comments?(/|_|\.|$)|event[_ /.-]?(info|feed|entry|service)|ugcpub|ugc[_ /.-]|mtrproxy|trfe|jams\.maps|proxy\.mob\.maps|geointernal\.mob\.maps' /tmp/s.txt | \
-            grep -Eai 'https|/|host|url|endpoint|service|road|event|comment|ugc|proxy|feed|entry' | sort -u | head -350
-          echo '=== MAPS HOSTS NEAR EVENTS ==='
-          grep -Eaio 'https?://[^[:space:]"<>]+|[A-Za-z0-9._-]+\.(mob\.)?maps\.yandex\.(ru|net|com)|[A-Za-z0-9._-]+\.yandex\.(ru|net|com)' /tmp/s.txt | \
-            grep -Eai 'maps|event|road|ugc|proxy|geo|jam|traffic|comment' | sort -u | head -180
-          echo '=== API MODEL NAMES ==='
-          grep -Eai 'RoadEventsManager|RoadEventsLayer|requestEventInfo|addComment|FeedSession|EventInfoSession|RoadEventSession|EventTag|RoadEvent' /tmp/s.txt | sort -u | head -220
+          LIB=$(find /tmp/unpack -type f -name 'libmaps-mobile.so' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
+          echo '=== PACKAGE / LIB ==='
+          grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
+          echo "$LIB"; ls -lh "$LIB"
+          strings -a -t x "$LIB" > /tmp/lm.txt
+          echo '=== ROAD EVENT STRING CONTEXT ==='
+          grep -Ein -C 5 'road[_ /.-]?events?|roadevents|requestEventInfo|EventInfoSession|FeedSession|RoadEventsManager|RoadEventsLayer|PendingComments|roadEventId' /tmp/lm.txt | head -320 || true
+          echo '=== URL/PATH CANDIDATES ==='
+          grep -Eai 'https?://|/[A-Za-z0-9._/-]*(road|event|comment|ugc|feed|traffic|jam)[A-Za-z0-9._/?=&-]*' /tmp/lm.txt | \
+            grep -Eai 'map|road|event|comment|ugc|feed|traffic|jam|proxy' | sort -u | head -260 || true
+          echo '=== PROXY CONTEXT ==='
+          grep -Ein -C 8 'proxy\.mob\.maps|geointernal\.mob\.maps|ugcpub|mapkit2' /tmp/lm.txt | head -300 || true
+          echo '=== NETWORK TOKENS ==='
+          grep -Eai 'road_events|roadevents|event_info|eventinfo|comments|feed|entry' /tmp/lm.txt | \
+            grep -Eai 'proto|http|request|response|url|path|host|service|client|server|api' | sort -u | head -260 || true
