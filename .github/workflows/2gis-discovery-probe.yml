@@ -1,0 +1,35 @@
+name: 2GIS Discovery Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/2gis-discovery-probe.yml'
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Probe catalog and fuel endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEY='c7f1a769-c8a5-4636-b14d-d8c987808a12'
+          echo '=== CATALOG SEARCH ==='
+          curl -fsSLG 'https://catalog.api.2gis.com/3.0/items' \
+            --data-urlencode 'q=АЗС' --data-urlencode 'type=branch' \
+            --data-urlencode 'point=30.4390,59.8775' --data-urlencode 'radius=15000' \
+            --data-urlencode 'page_size=50' --data-urlencode "key=$KEY" \
+            --data-urlencode 'fields=items.point,items.address_name,items.name,items.rubrics' | python -m json.tool | head -1200 || true
+          echo '=== BENZIN CANDIDATES ==='
+          for u in \
+            'https://benzin.api.2gis.ru/api/v1/stations?lat=59.8775&lng=30.4390&radius=15000' \
+            'https://benzin.api.2gis.ru/api/v1/stations?region_id=38' \
+            'https://benzin.api.2gis.ru/api/v1/stations?bbox=30.20,59.70,30.70,60.05' \
+            'https://benzin.api.2gis.ru/api/v1/stations?bounds=30.20,59.70,30.70,60.05' \
+            'https://benzin.api.2gis.ru/api/v1/stations?limit=10&offset=0'; do
+              echo URL:$u
+              curl -sS -w '\nHTTP:%{http_code}\n' "$u" | head -120 || true
+          done
