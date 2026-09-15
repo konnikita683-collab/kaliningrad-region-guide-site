@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Resolve AArch64 xrefs to Yandex road-event endpoints
+      - name: Inspect road-event endpoints and layer configuration
         shell: bash
         run: |
           set -u
@@ -31,94 +31,39 @@ jobs:
           LIB=$(find /tmp/unpack -type f -name 'libmaps-mobile.so' -printf '%s %p\n' | sort -nr | head -1 | cut -d' ' -f2-)
           echo '=== PACKAGE ==='; grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
           echo "LIB=$LIB"
-          python3 -m pip install -q pyelftools capstone
+
+          echo '=== ENDPOINT-LIKE STRINGS ==='
+          strings -a -t x "$LIB" | grep -Eai 'comments/(list|add)|/user_events|/feedback|road.?events.*url|url.*road.?events|roadevents.*url|proxy\.mob\.maps\.yandex\.net|event[_-]?id|comments_count' | head -1200 || true
+
+          echo '=== ASCII NEIGHBORHOODS ==='
           python3 - "$LIB" <<'PY'
-          import sys
-          from elftools.elf.elffile import ELFFile
-          from capstone import Cs, CS_ARCH_ARM64, CS_MODE_ARM, arm64_const
+          import re,sys
+          b=open(sys.argv[1],'rb').read()
+          needles=[b'comments/list',b'comments/add',b'/user_events',b'Road events layer url: ',b'https://proxy.mob.maps.yandex.net:443']
+          for n in needles:
+              print('\n###',n.decode(errors='replace'))
+              pos=0
+              while True:
+                  i=b.find(n,pos)
+                  if i<0: break
+                  lo=max(0,i-8192); hi=min(len(b),i+8192)
+                  arr=[]
+                  for m in re.finditer(rb'[\x20-\x7e]{3,}',b[lo:hi]):
+                      s=m.group().decode('utf-8','replace')
+                      off=lo+m.start()
+                      if abs(off-i)<2500 or any(x in s.lower() for x in ['comment','event','road','feed','http','url','proxy','user_','feedback','layer','version','tile','bbox','clid','lang','locale','zoom']):
+                          arr.append((off,s[:700]))
+                  print(f'offset=0x{i:x}')
+                  for off,s in arr[:260]: print(f'0x{off:x}\t{s}')
+                  pos=i+1
 
-          path=sys.argv[1]
-          needles=[b'comments/add',b'/user_events',b'/feedback',b'Feed not found at url: [',b'https://proxy.mob.maps.yandex.net:443']
-          with open(path,'rb') as f:
-              raw=f.read()
-          with open(path,'rb') as f:
-              elf=ELFFile(f)
-              text=elf.get_section_by_name('.text')
-              tdata=text.data(); tva=text['sh_addr']; toff=text['sh_offset']
-              loads=[]
-              for seg in elf.iter_segments():
-                  if seg['p_type']=='PT_LOAD':
-                      loads.append((seg['p_offset'],seg['p_filesz'],seg['p_vaddr']))
-              def off2va(off):
-                  for po,ps,pv in loads:
-                      if po <= off < po+ps: return pv+(off-po)
-                  return None
-              targets={}
-              print('=== TARGETS ===')
-              for n in needles:
-                  start=0; arr=[]
-                  while True:
-                      o=raw.find(n,start)
-                      if o<0: break
-                      va=off2va(o); arr.append((o,va)); start=o+1
-                  targets[n]=arr
-                  print(n.decode(errors='replace'),[(hex(o),hex(v) if v is not None else None) for o,v in arr])
-
-              md=Cs(CS_ARCH_ARM64,CS_MODE_ARM); md.detail=True
-              ins=list(md.disasm(tdata,tva))
-              target_by_va={v:(n,o) for n,arr in targets.items() for o,v in arr if v is not None}
-              pages={v & ~0xfff for v in target_by_va}
-              xrefs=[]
-              # Track adrp register for short windows; include ADR direct references.
-              reg_pages={}
-              reg_age={}
-              for idx,i in enumerate(ins):
-                  for r in list(reg_age):
-                      reg_age[r]+=1
-                      if reg_age[r]>12:
-                          reg_age.pop(r,None); reg_pages.pop(r,None)
-                  if i.mnemonic=='adr' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM:
-                      dest=i.operands[0].reg; val=i.operands[1].imm
-                      if val in target_by_va:
-                          xrefs.append((idx,val,'adr'))
-                  elif i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM:
-                      r=i.operands[0].reg; reg_pages[r]=i.operands[1].imm; reg_age[r]=0
-                  elif i.mnemonic=='add' and len(i.operands)>=3 and i.operands[1].type==arm64_const.ARM64_OP_REG and i.operands[2].type==arm64_const.ARM64_OP_IMM:
-                      src=i.operands[1].reg
-                      if src in reg_pages:
-                          val=reg_pages[src]+i.operands[2].imm
-                          if val in target_by_va:
-                              xrefs.append((idx,val,'adrp+add'))
-                  # clang often materializes string via adrp + ldr from GOT; print candidates whose adrp page is target page
-                  if i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM and i.operands[1].imm in pages:
-                      pass
-              print('\n=== EXACT XREFS ===')
-              for idx,val,kind in xrefs:
-                  n,o=target_by_va[val]
-                  print(f'\nTARGET {n!r} file={o:#x} va={val:#x} via={kind} at {ins[idx].address:#x}')
-                  for j in range(max(0,idx-25),min(len(ins),idx+35)):
-                      q=ins[j]; mark='>>' if j==idx else '  '
-                      print(f'{mark} {q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
-
-              # Broader page xrefs, useful when ADD is separated or pointer arithmetic occurs.
-              print('\n=== TARGET-PAGE ADRP WINDOWS ===')
-              shown=0
-              for idx,i in enumerate(ins):
-                  if i.mnemonic=='adrp' and len(i.operands)>=2 and i.operands[1].type==arm64_const.ARM64_OP_IMM and i.operands[1].imm in pages:
-                      # only show windows containing an immediate low12 equal to target low12 in next 12 instructions
-                      page=i.operands[1].imm
-                      candidates=[v for v in target_by_va if (v & ~0xfff)==page]
-                      lows={v & 0xfff:v for v in candidates}
-                      hit=False
-                      for q in ins[idx:idx+13]:
-                          for op in getattr(q,'operands',[]):
-                              if op.type==arm64_const.ARM64_OP_IMM and op.imm in lows:
-                                  hit=True
-                      if hit and shown<100:
-                          print(f'\nADRP at {i.address:#x} {i.op_str} page={page:#x}')
-                          for q in ins[max(0,idx-8):min(len(ins),idx+18)]: print(f'  {q.address:#012x}: {q.mnemonic:8s} {q.op_str}')
-                          shown+=1
+          print('\n=== SLASH PATH CLUSTER AROUND ROAD EVENTS TU ===')
+          for m in re.finditer(rb'[\x20-\x7e]{3,}',b):
+              s=m.group().decode('utf-8','replace')
+              off=m.start()
+              if 0x545000 <= off <= 0x548000 and ('/' in s or 'url' in s.lower() or 'comment' in s.lower() or 'event' in s.lower() or 'feed' in s.lower()):
+                  print(f'0x{off:x}\t{s[:1000]}')
           PY
 
-          echo '=== RELATED STATIC STRINGS ==='
-          strings -a "$LIB" | grep -Eai 'comments|user_events|road[_ -]?events|event[_ -]?id|feed not found|feedback' | head -600 || true
+          echo '=== CONFIG FIELD CANDIDATES ==='
+          strings -a "$LIB" | grep -Eai 'user.?events|road.?events|tile.?url|url.?template|dynamic.?version|update.?period|comments/(list|add)|feed' | head -1000 || true
