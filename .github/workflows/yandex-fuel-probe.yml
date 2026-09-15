@@ -18,7 +18,7 @@ jobs:
           set -u
           git clone -q https://github.com/kiber-io/apkdgo.git /tmp/apkdgo
           cd /tmp/apkdgo
-          go build -o /tmp/apkd ./cmd/apkd 2>/dev/null || go build -o /tmp/apkd .
+          go build -o /tmp/apkd ./apkd
           mkdir -p /tmp/yandexpkg
           echo '--- APKD DOWNLOAD ---'
           /tmp/apkd -s rustore -p ru.yandex.yandexmaps -O /tmp/yandexpkg -vv || true
