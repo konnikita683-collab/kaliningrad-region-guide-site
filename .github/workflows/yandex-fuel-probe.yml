@@ -10,9 +10,9 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 20
     steps:
-      - name: Inspect libmaps-mobile road-event transport context
+      - name: Trace Yandex road-events request construction
         shell: bash
         run: |
           set -u
@@ -33,13 +33,46 @@ jobs:
           grep -E 'ru\.yandex\.yandexmaps v' /tmp/download.log | tail -1 || true
           echo "$LIB"; ls -lh "$LIB"
           strings -a -t x "$LIB" > /tmp/lm.txt
-          echo '=== ROAD EVENT STRING CONTEXT ==='
-          grep -Ein -C 5 'road[_ /.-]?events?|roadevents|requestEventInfo|EventInfoSession|FeedSession|RoadEventsManager|RoadEventsLayer|PendingComments|roadEventId' /tmp/lm.txt | head -320 || true
-          echo '=== URL/PATH CANDIDATES ==='
-          grep -Eai 'https?://|/[A-Za-z0-9._/-]*(road|event|comment|ugc|feed|traffic|jam)[A-Za-z0-9._/?=&-]*' /tmp/lm.txt | \
-            grep -Eai 'map|road|event|comment|ugc|feed|traffic|jam|proxy' | sort -u | head -260 || true
-          echo '=== PROXY CONTEXT ==='
-          grep -Ein -C 8 'proxy\.mob\.maps|geointernal\.mob\.maps|ugcpub|mapkit2' /tmp/lm.txt | head -300 || true
-          echo '=== NETWORK TOKENS ==='
-          grep -Eai 'road_events|roadevents|event_info|eventinfo|comments|feed|entry' /tmp/lm.txt | \
-            grep -Eai 'proto|http|request|response|url|path|host|service|client|server|api' | sort -u | head -260 || true
+
+          echo '=== EXACT PATH/HOST STRING OFFSETS ==='
+          grep -Ei '(/user_events|/feedback|/comments|/comment|/events|proxy\.mob\.maps\.yandex\.net|road_events)' /tmp/lm.txt | head -500 || true
+
+          echo '=== LOCAL STRING NEIGHBORHOODS ==='
+          python3 - "$LIB" <<'PY'
+          import re, sys
+          p=sys.argv[1]
+          b=open(p,'rb').read()
+          needles=[b'/user_events',b'/feedback',b'/comments',b'proxy.mob.maps.yandex.net',b'RoadEventsManagerImpl',b'createRoadEventsRequestFactory']
+          for n in needles:
+              print('\n---',n.decode(errors='replace'),'---')
+              start=0
+              found=0
+              while True:
+                  i=b.find(n,start)
+                  if i<0: break
+                  found+=1
+                  lo=max(0,i-4096); hi=min(len(b),i+len(n)+4096)
+                  chunk=b[lo:hi]
+                  ss=[]
+                  for m in re.finditer(rb'[ -~]{4,}',chunk):
+                      s=m.group().decode('utf-8','replace')
+                      off=lo+m.start()
+                      if any(k.lower() in s.lower() for k in ['http','event','comment','feed','proxy','road','user_','feedback','request','response','url','path','host','auth','token','clid','uuid','locale','lang']):
+                          ss.append((off,s[:500]))
+                  print(f'offset=0x{i:x}')
+                  for off,s in ss[:160]: print(f'  0x{off:x} {s}')
+                  start=i+1
+                  if found>=5: break
+          PY
+
+          echo '=== SYMBOLS ==='
+          (nm -C "$LIB" 2>/dev/null || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
+          (nm -D -C "$LIB" 2>/dev/null || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
+          (readelf -Ws "$LIB" 2>/dev/null | c++filt || true) | grep -Ei 'RoadEventsManagerImpl|createRoadEventsRequestFactory|road_events_layer::DataSource|requestEventInfo|comments\(' | head -240 || true
+
+          echo '=== HTTP / REQUEST LOG STRINGS ==='
+          grep -Eai 'GET /|POST /|PUT /|DELETE /|request duration|HTTP/[0-9]|Content-Type|Authorization|X-[A-Za-z-]+|clid|uuid|device[_-]?id|session|token' /tmp/lm.txt | \
+            grep -Eai 'road|event|comment|user|feedback|proxy|mapkit|http|request|content|auth|clid|uuid|device|session|token' | head -500 || true
+
+          echo '=== PROTO / CONFIG FIELD-LIKE STRINGS ==='
+          grep -Ein -C 12 'mobile_config\.mapkit2\.roadevents\.Config|proto\.road_events\.(UserEvents|UserEvent|RoadEventMetadata|TextEntry|LayerRoadEventMetadata)' /tmp/lm.txt | head -600 || true
