@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101828">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Family HQ">
+<title>Family HQ — UX v2 MVP</title>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#162033;--muted:#738097;--line:#e3e9f1;--blue:#4d7df3;--blue2:#edf3ff;--green:#2a9c69;--amber:#cc8a2c;--red:#d95b5b;--shadow:0 8px 28px rgba(33,48,77,.07)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,100%);margin:auto;padding:14px 12px 92px}
+.safety{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:12px;border:1px solid #cadefa;background:#edf4ff;border-radius:14px;color:#315f9d;font-size:11px}.safety strong{font-size:12px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 2px 14px}.header h1{margin:0;font-size:29px;letter-spacing:-.03em}.header p{margin:4px 0 0;color:var(--muted);font-size:12px}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800}.back{border:0;background:transparent;color:var(--blue);padding:4px 0}
+.capture{display:grid;grid-template-columns:minmax(0,1fr) 42px 42px;gap:8px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:7px;box-shadow:var(--shadow)}.capture input{border:0;outline:0;padding:0 8px;background:transparent}.round{border:0;border-radius:12px;background:#eef3f9}.round.primary{background:var(--blue);color:#fff;font-size:22px}
+.section{margin-top:18px}.sectionBar{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}.sectionBar h2,.sectionBar h3{margin:0;font-size:16px}.count{font-size:11px;color:var(--muted);font-weight:800}
+.stack{display:grid;gap:9px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow)}.attention{width:100%;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left}.attention.danger{border-color:#f4c9c9}.attention.warn{border-color:#f0ddb0}.icon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:#f1f4f8}.attention div{display:grid;gap:3px}.attention small,.muted{color:var(--muted);font-size:11px}
+.shortcutGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.shortcut{border:1px solid var(--line);background:#fff;border-radius:16px;padding:12px 9px;text-align:left}.shortcut span{font-size:22px}.shortcut strong{display:block;font-size:12px;margin-top:5px}.shortcut small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(640px,100%);display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px 7px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid var(--line);backdrop-filter:blur(18px);z-index:20}.nav button{border:0;background:transparent;border-radius:12px;padding:7px 3px;color:#738097;font-size:10px}.nav button.active{background:#edf3ff;color:#315f9d;font-weight:800}.nav .nicon{display:block;font-size:19px;margin-bottom:2px}
+.workspace{display:none}.workspace.active{display:block}.create{margin:4px 0 14px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:0 13px}.create summary{padding:13px 0;font-weight:800;color:#315f9d}.form{display:grid;gap:10px;padding:0 0 13px}.form label{display:grid;gap:5px;font-size:11px;color:var(--muted);font-weight:700}.form input,.form select{border:1px solid #d9e1eb;background:#fff;border-radius:11px;padding:10px;color:var(--ink)}.primaryBtn{border:0;background:var(--blue);color:#fff;border-radius:11px;padding:10px 12px;font-weight:800}.ghost{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 11px;color:#536176}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 2px;border-bottom:1px solid #eef1f5}.row:last-child{border-bottom:0}.rowMain{display:grid;gap:3px}.row small{color:var(--muted);font-size:11px}.check{width:26px;height:26px;border:1px solid #d9e1eb;border-radius:50%;background:#fff}.check.done{background:#e9f7f0;color:var(--green);border-color:#c8e8d7}
+.badge{display:inline-block;width:max-content;padding:5px 8px;border-radius:999px;background:#eef2f7;color:#68758a;font-size:10px;font-weight:800}.badge.blue{background:#edf3ff;color:#315f9d}.badge.green{background:#eaf7f0;color:#237a54}.badge.amber{background:#fff5df;color:#9a681e}
+.inbox{display:grid;gap:8px}.inboxItem p{font-weight:750;line-height:1.4}.proposal{display:flex;justify-content:space-between;gap:10px;padding:10px;background:#edf3ff;border-radius:12px;color:#456388}.actions{display:flex;gap:8px;margin-top:10px;align-items:center}.actions select{flex:1;border:1px solid var(--line);border-radius:10px;padding:8px}
+.tripCard{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left}.tripArt{width:72px;height:72px;border-radius:14px;background:linear-gradient(145deg,#dcefdc,#dce9ff);display:grid;place-items:center;font-size:30px}.tripInfo{display:grid;gap:3px}.tripMeta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:10px}
+.hero{display:flex;justify-content:space-between;align-items:center;gap:12px}.avatars{display:flex}.avatars i{width:30px;height:30px;margin-left:-5px;border:2px solid #fff;border-radius:50%;background:#dceaff;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:800}
+.ideaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.idea{display:grid;gap:7px}.vehicle{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center}.carPic{width:60px;height:54px;border-radius:14px;background:#eef3f8;display:grid;place-items:center;font-size:30px}.mileage{text-align:right}.mileage strong{display:block;font-size:20px}.mileage small{color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric{display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px;align-items:center}.metric strong{font-size:13px}.metric small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.timeline{display:grid}.timeline .row{grid-template-columns:15px minmax(0,1fr)}.dot{width:12px;height:12px;border-radius:50%;background:var(--blue)}.dot.red{background:var(--red)}.dot.amber{background:var(--amber)}
+.menu{display:grid;gap:8px}.menu button{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left}.menu .icon{font-size:20px}.menu p{margin:4px 0 0;color:var(--muted);font-size:11px}
+.progress{height:7px;border-radius:999px;background:#e9edf2;overflow:hidden}.progress span{display:block;height:100%;background:var(--blue)}.payHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.memory{display:grid;gap:10px}.search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.search input{border:1px solid var(--line);border-radius:11px;padding:10px}.answer{display:none;background:#edf7f2;border:1px solid #cde8db;color:#28694c;border-radius:14px;padding:11px;font-size:12px}
+.cat{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center}.catIcon{width:34px;height:34px;border-radius:10px;background:#f1f5fa;display:grid;place-items:center}
+.child{display:grid;gap:12px}.childHead{display:flex;gap:10px;align-items:center}.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#dceaff;font-weight:900}
+.notice{padding:10px 12px;border-radius:13px;background:#fff7e8;border:1px solid #f0d9aa;color:#806022;font-size:11px}
+@media(max-width:420px){.shell{padding-left:10px;padding-right:10px}.metrics{grid-template-columns:1fr}.ideaGrid{grid-template-columns:1fr}.safety{flex-direction:column}.header h1{font-size:27px}.shortcut small{display:none}}
+</style>
+</head>
+<body>
+<main class="shell">
+<div class="safety"><strong>Интерактивный MVP v2</strong><span>Только фиктивные данные · ничего не сохраняется</span></div>
+
+<section id="today" class="workspace active">
+  <div class="header"><div><h1>Доброе утро!</h1><p>пятница, 18 сентября 2026</p></div><button class="round" onclick="openMore('ask')" aria-label="Спроси Family HQ">✦</button></div>
+  <form class="capture" id="captureForm"><input id="captureInput" aria-label="Новая запись Inbox" maxlength="1000" placeholder="Быстро записать..."><button type="button" class="round" id="voiceBtn">🎙</button><button class="round primary" type="submit">＋</button></form>
+  <div id="voiceHint" class="muted" style="margin:6px 4px 0"></div>
+  <div class="section" id="inboxSection" style="display:none"><div class="sectionBar"><h2>Входящие</h2><span class="count" id="inboxCount">0</span></div><div class="inbox" id="inboxList"></div></div>
+  <div class="section"><div class="sectionBar"><h2>Требует внимания</h2><span class="count">4</span></div><div class="stack">
+    <button class="card attention danger" onclick="show('tasks')"><span class="icon">!</span><div><strong>Оплатить хранение шин</strong><small>Задача · Сегодня</small></div><span>›</span></button>
+    <button class="card attention warn" onclick="openMore('payments')"><span class="icon">₽</span><div><strong>Хранение шин</strong><small>3 200 ₽ · до 20 сентября</small></div><span>›</span></button>
+  </div></div>
+  <div class="section"><div class="sectionBar"><h2>Ближайшее</h2><button class="back" onclick="show('trips')">Все</button></div>
+    <button class="card tripCard" onclick="openTrip()"><span class="tripArt">🏕</span><span class="tripInfo"><span class="eyebrow">Поездка</span><strong>Выходные у озера</strong><small>26–27 сентября</small><span class="tripMeta"><span>4 участника</span><span>Чек-лист 4/7</span></span></span><span>›</span></button>
+  </div>
+  <div class="section shortcutGrid"><button class="shortcut" onclick="openMore('kids')"><span>👦</span><strong>Дети и школа</strong><small>Расписание и важное</small></button><button class="shortcut" onclick="openMore('payments')"><span>💳</span><strong>Платежи</strong><small>Закрытие месяца</small></button><button class="shortcut" onclick="openMore('ask')"><span>✦</span><strong>Спроси HQ</strong><small>По семейной памяти</small></button></div>
+</section>
+
+<section id="tasks" class="workspace">
+  <div class="header"><div><span class="eyebrow">Личные и семейные</span><h1>Задачи</h1></div></div>
+  <details class="create"><summary>＋ Новая задача</summary><form class="form" id="taskForm"><label>Что сделать<input id="newTask" required placeholder="Например: позвонить в школу"></label><label>Повтор<select id="repeat"><option>Не повторять</option><option>Еженедельно</option><option>Ежемесячно</option><option>Ежегодно</option><option>Свой интервал</option><option>После выполнения</option></select></label><label>Свой интервал — каждые<input id="customInterval" type="number" min="2" max="120" value="2"></label><label>Единица<select id="customUnit"><option value="weeks">недели</option><option value="months">месяцы</option><option value="years">годы</option></select></label><button class="primaryBtn">Добавить задачу</button></form></details>
+  <div class="section"><div class="sectionBar"><h2>Открытые</h2><span class="count" id="taskCount">2</span></div><div class="card" id="taskList"></div></div>
+</section>
+
+<section id="trips" class="workspace">
+  <div id="tripListView"><div class="header"><div><span class="eyebrow">Планирование и идеи</span><h1>Поездки</h1></div></div><div class="stack"><button class="card tripCard" onclick="openTrip()"><span class="tripArt">🏕</span><span class="tripInfo"><span class="eyebrow">Планируем</span><strong>Выходные у озера</strong><small>26–27 сентября</small><span class="tripMeta"><span>4 участника</span><span>Чек-лист 4/7</span></span></span><span>›</span></button></div></div>
+  <div id="tripDetail" style="display:none"><div class="header"><button class="back" onclick="closeTrip()">‹ Поездки</button><div style="text-align:center"><span class="eyebrow">Планируем</span><h1 style="font-size:22px">Выходные у озера</h1></div><span></span></div>
+  <div class="card hero"><div><strong>26–27 сентября</strong><div class="muted">Общее семье</div></div><div class="avatars"><i>И</i><i>О</i><i>Л</i><i>Е</i></div></div>
+  <div class="section"><div class="sectionBar"><h2>Чек-лист</h2><span class="count">4/7</span></div><div class="card" id="checklist"></div></div>
+  <div class="section"><div class="sectionBar"><h2>Идеи для поездки</h2><span class="count" id="ideaCount">1</span></div><div class="ideaGrid" id="ideas"></div><details class="create" style="margin-top:9px"><summary>＋ Сохранить идею</summary><form class="form" id="ideaForm"><label>Название<input id="ideaTitle"></label><label>Ссылка<input id="ideaUrl" type="url" placeholder="https://…"></label><button class="primaryBtn">Сохранить идею</button></form></details></div>
+  </div>
+</section>
+
+<section id="car" class="workspace">
+  <div class="header"><div><span class="eyebrow">Цифровой паспорт</span><h1>Машина</h1></div></div>
+  <div class="card vehicle"><span class="carPic">🚙</span><div><span class="eyebrow">Автомобиль</span><h2 style="margin:3px 0">RAV4</h2><div class="muted">Toyota · 2021</div></div><div class="mileage"><small>Пробег</small><strong>48 200</strong><small>км</small></div></div>
+  <div class="section metrics"><div class="card metric"><span class="icon">🛡</span><div><strong>ОСАГО</strong><small>Демо-страховая · до 18.06.2027</small></div></div><div class="card metric"><span class="icon">🛡</span><div><strong>КАСКО</strong><small>Не заполнено</small></div></div><div class="card metric"><span class="icon">◉</span><div><strong>Шины</strong><small>Летние · R18 · на машине</small></div></div><div class="card metric"><span class="icon">🔧</span><div><strong>Сервис</strong><small>Последнее: июль 2026</small></div></div></div>
+  <div class="section"><div class="sectionBar"><h2>История</h2><span class="count">3</span></div><div class="card timeline"><div class="row"><span class="dot red"></span><div class="rowMain"><strong>Плановое ТО</strong><small>15.07.2026 · 46 900 км</small></div></div><div class="row"><span class="dot amber"></span><div class="rowMain"><strong>Проверить давление в шинах</strong><small>16.09.2026 · 48 200 км</small></div></div><div class="row"><span class="dot"></span><div class="rowMain"><strong>Замена щёток стеклоочистителя</strong><small>10.05.2026 · 44 600 км</small></div></div></div></div>
+</section>
+
+<section id="more" class="workspace">
+  <div id="moreHome"><div class="header"><div><span class="eyebrow">Настройки и сервисы</span><h1>Ещё</h1></div></div><div class="menu">
+    <button class="card" onclick="openMore('kids')"><span class="icon">👦</span><div><strong>Дети и школа</strong><p>Расписание, задачи, документы и оплаты ребёнка.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('payments')"><span class="icon">💳</span><div><strong>Обязательные платежи</strong><p>Ежемесячный контроль обязательств.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('documents')"><span class="icon">📄</span><div><strong>Документы</strong><p>Сроки, категории и безопасные ссылки.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('integrations')"><span class="icon">↔</span><div><strong>Интеграции</strong><p>Calendar, Drive и состояние подключений.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('notifications')"><span class="icon">🔔</span><div><strong>Уведомления</strong><p>Внутренние и внешние каналы.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('privacy')"><span class="icon">🔒</span><div><strong>Приватность</strong><p>Границы доступа и Family Memory.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('settings')"><span class="icon">⚙</span><div><strong>Настройки</strong><p>Параметры Household.</p></div><span>›</span></button>
+    <button class="card" onclick="openMore('ask')"><span class="icon">✦</span><div><strong>Спроси Family HQ</strong><p>Ответы по семейной памяти с источником.</p></div><span>›</span></button>
+  </div><div class="notice" style="margin-top:14px">В MVP v2 «Личное» = private: запись видит только создатель. Дети не получают доступ к взрослым объектам через UI или RLS.</div></div>
+
+  <div id="paymentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Месячный контроль</span><h1 style="font-size:24px">Платежи</h1></div><span></span></div><div class="card"><div class="payHead"><strong id="paySummary">1 из 3 оплачено</strong><span class="count" id="payPct">33%</span></div><div class="progress"><span id="payBar" style="width:33%"></span></div><div class="muted" id="payRemain" style="margin-top:7px">Осталось: 2</div></div><div class="section"><div class="card" id="paymentsList"></div></div></div>
+
+  <div id="kidsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">School & Kids Autopilot</span><h1 style="font-size:24px">Дети и школа</h1></div><span></span></div><div class="stack"><div class="card child"><div class="childHead"><div class="avatar">Л</div><div><span class="eyebrow">Ребёнок</span><h2 style="margin:3px 0">Лев</h2></div></div><div class="row"><span class="icon">◷</span><div class="rowMain"><strong>Робототехника</strong><small>суббота · 11:00</small></div><span>›</span></div><div class="row"><span class="icon">○</span><div class="rowMain"><strong>Подготовить материалы</strong><small>до пятницы</small></div><span>›</span></div></div><div class="card child"><div class="childHead"><div class="avatar">Е</div><div><span class="eyebrow">Ребёнок</span><h2 style="margin:3px 0">Ева</h2></div></div><div class="row"><span class="icon">◷</span><div class="rowMain"><strong>Английский</strong><small>воскресенье · 12:30</small></div><span>›</span></div></div></div></div>
+
+  <div id="documentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Важное и сроки</span><h1 style="font-size:24px">Документы</h1></div><span></span></div><div class="stack"><div class="card cat"><span class="catIcon">👤</span><strong>Личные</strong><span class="count">4 ›</span></div><div class="card cat"><span class="catIcon">👦</span><strong>Дети</strong><span class="count">6 ›</span></div><div class="card cat"><span class="catIcon">🚗</span><strong>Машина</strong><span class="count">3 ›</span></div><div class="card cat"><span class="catIcon">🛡</span><strong>Страховки</strong><span class="count">2 ›</span></div></div><div class="notice" style="margin-top:12px">Family HQ хранит метаданные и HTTPS-ссылки, а не байты документов и секреты.</div></div>
+
+  <div id="integrationsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Внешние сервисы</span><h1 style="font-size:24px">Интеграции</h1></div><span></span></div><div class="card"><strong>Google Calendar</strong><p class="muted">OAuth не подключён. Экспорт и OAuth-синхронизация пока не включены; модель календарных событий уже подготовлена.</p><span class="badge">Не подключено</span></div><div class="card" style="margin-top:8px"><strong>Google Drive</strong><p class="muted">Подключение файлов будет отдельным приватным решением.</p></div></div>
+
+  <div id="notificationsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Каналы и внимание</span><h1 style="font-size:24px">Уведомления</h1></div><span></span></div><div class="card"><strong>Внутри Family HQ</strong><p class="muted">Экран «Сегодня» собирает просрочки и ближайшие действия.</p><span class="badge green">Работает</span></div><div class="notice" style="margin-top:8px">Push и email в MVP выключены и не запрашивают разрешения.</div></div>
+
+  <div id="privacyPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Данные семьи</span><h1 style="font-size:24px">Приватность</h1></div><span></span></div><div class="card"><strong>Общее семье / Только взрослым / Личное</strong><p class="muted">Границы доступа применяются на уровне RLS. Внешний AI семейные записи не получает.</p></div></div>
+
+  <div id="settingsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Family HQ</span><h1 style="font-size:24px">Настройки</h1></div><span></span></div><div class="card"><strong>Тестовая семья</strong><p class="muted">В рабочем приложении владелец может изменить название Household. Демо ничего не сохраняет.</p></div></div>
+
+  <div id="askPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Семейная память</span><h1 style="font-size:24px">Спроси Family HQ</h1></div><span></span></div><div class="card memory"><div class="muted">Ответ только из фиктивных записей этой демо-сессии. Внешний AI не получает семейные данные.</div><div class="search"><input id="askInput" aria-label="Вопрос Family HQ" placeholder="Когда заканчивается ОСАГО?"><button class="primaryBtn" onclick="ask()">Найти</button></div><div class="answer" id="answer"></div></div></div>
+</section>
+
+<nav class="nav" aria-label="Разделы MVP"><button class="active" data-tab="today" onclick="show('today')"><span class="nicon">⌂</span>Сегодня</button><button data-tab="tasks" onclick="show('tasks')"><span class="nicon">✓</span>Задачи</button><button data-tab="trips" onclick="show('trips')"><span class="nicon">✈</span>Поездки</button><button data-tab="car" onclick="show('car')"><span class="nicon">🚗</span>Машина</button><button data-tab="more" onclick="show('more')"><span class="nicon">☰</span>Ещё</button></nav>
+</main>
+
+<script>
+var tasks=[
+ {id:1,title:"Оплатить хранение шин",due:"Сегодня",repeat:"",done:false},
+ {id:2,title:"Подготовить материалы к кружку",due:"19 сентября",repeat:"Еженедельно",done:false},
+ {id:3,title:"Заказать бытовые фильтры",due:"Вчера",repeat:"",done:true}
+];
+var inbox=[];
+var ideas=[{title:"Лесная экотропа",url:"https://example.com"}];
+var payments=[
+ {title:"Хранение шин",amount:5000,due:"до 20 сентября",paid:false},
+ {title:"Интернет",amount:950,due:"до 25 сентября",paid:true},
+ {title:"Кружок рисования",amount:4800,due:"до 28 сентября",paid:false}
+];
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
+function show(id){
+ document.querySelectorAll(".workspace").forEach(function(x){x.classList.remove("active")});
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll(".nav button").forEach(function(b){b.classList.toggle("active",b.dataset.tab===id)});
+ if(id==="tasks") renderTasks();
+ if(id==="trips" && document.getElementById("tripDetail").style.display==="none") closeTrip();
+ if(id==="more") moreHome();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function suggest(t){
+ var s=(" "+t.toLowerCase()+" ");
+ if(/машин|авто|тормоз|шины|масло|сервис|пробег/.test(s))return"Машина";
+ if(/поезд|озер|отель|маршрут|выходн|экскурс/.test(s))return"Поездка";
+ if(/документ|паспорт|справк|полис|страхов/.test(s))return"Документ";
+ if(/купить|позвонить|сделать|забрать|оплатить|проверить|нужно|напомнить/.test(s))return"Задача";
+ return"Заметка";
+}
+document.getElementById("captureForm").addEventListener("submit",function(e){
+ e.preventDefault();var input=document.getElementById("captureInput");var t=input.value.trim();if(!t)return;
+ inbox.unshift({text:t,type:suggest(t),confirmed:false});input.value="";renderInbox();
+});
+function renderInbox(){
+ var sec=document.getElementById("inboxSection");sec.style.display=inbox.length?"block":"none";document.getElementById("inboxCount").textContent=inbox.length;
+ document.getElementById("inboxList").innerHTML=inbox.map(function(x,i){
+  var options=["Задача","Поездка","Машина","Документ","Заметка"].map(function(v){return '<option'+(v===x.type?' selected':'')+'>'+v+'</option>'}).join("");
+  return '<article class="card inboxItem"><span class="badge">Текст</span><p>'+esc(x.text)+'</p><div class="proposal"><span>'+(x.confirmed?'Подтверждено':'Family HQ предлагает')+'</span><strong>'+esc(x.type)+'</strong></div><div class="actions">'+(x.confirmed?'<button class="primaryBtn" onclick="convertInbox('+i+')">Создать</button>':'<select onchange="inbox['+i+'].type=this.value">'+options+'</select><button class="primaryBtn" onclick="confirmInbox('+i+')">Подтвердить</button>')+'</div></article>';
+ }).join("");
+}
+function confirmInbox(i){inbox[i].confirmed=true;renderInbox()}
+function convertInbox(i){
+ var x=inbox[i];if(x.type==="Задача"){tasks.unshift({id:Date.now(),title:x.text,due:"Без срока",repeat:"",done:false});inbox.splice(i,1);renderInbox();show("tasks");return}
+ if(x.type==="Поездка"){inbox.splice(i,1);renderInbox();show("trips");return}
+ inbox.splice(i,1);renderInbox();alert("В демо показан подтверждённый переход в раздел: "+x.type);
+}
+function renderTasks(){
+ var open=tasks.filter(function(t){return !t.done});
+ document.getElementById("taskCount").textContent=open.length;
+ document.getElementById("taskList").innerHTML=open.map(function(t){
+  return '<div class="row"><button class="check" aria-label="Выполнить '+esc(t.title)+'" onclick="completeTask('+t.id+')">○</button><div class="rowMain"><strong>'+esc(t.title)+'</strong><small>'+esc(t.due)+'</small>'+(t.repeat?'<span class="badge blue">↻ '+esc(t.repeat)+'</span>':'')+'</div><span>›</span></div>';
+ }).join("");
+}
+function completeTask(id){var t=tasks.find(function(x){return x.id===id});if(t)t.done=true;renderTasks()}
+document.getElementById("taskForm").addEventListener("submit",function(e){
+ e.preventDefault();var title=document.getElementById("newTask").value.trim();if(!title)return;var repeat=document.getElementById("repeat").value,customInterval=parseInt(document.getElementById("customInterval").value||"2",10),customUnit=document.getElementById("customUnit").value;if(repeat==="Свой интервал")repeat="Каждые "+(customInterval>=2?customInterval:2)+" "+(customUnit==="months"?"мес.":customUnit==="years"?"г.":"нед.");
+ tasks.unshift({id:Date.now(),title:title,due:"Без срока",repeat:repeat==="Не повторять"?"":repeat,done:false});document.getElementById("newTask").value="";renderTasks();
+});
+function openTrip(){show("trips");document.getElementById("tripListView").style.display="none";document.getElementById("tripDetail").style.display="block";renderIdeas();window.scrollTo(0,0)}
+function closeTrip(){document.getElementById("tripListView").style.display="block";document.getElementById("tripDetail").style.display="none"}
+document.getElementById("checklist").innerHTML=["Аптечка","Термос","Зарядки","Дождевики"].map(function(x,i){return '<div class="row"><span class="check '+(i<2?'done':'')+'">'+(i<2?'✓':'○')+'</span><div class="rowMain"><strong>'+x+'</strong></div><span></span></div>'}).join("");
+function renderIdeas(){document.getElementById("ideaCount").textContent=ideas.length;document.getElementById("ideas").innerHTML=ideas.map(function(x){return '<article class="card idea"><span class="badge blue">🔗 Идея</span><strong>'+esc(x.title)+'</strong>'+(x.url?'<small class="muted">'+esc(x.url)+'</small>':'')+'</article>'}).join("")}
+document.getElementById("ideaForm").addEventListener("submit",function(e){e.preventDefault();var t=document.getElementById("ideaTitle").value.trim(),u=document.getElementById("ideaUrl").value.trim();if(!t&&!u)return;ideas.unshift({title:t||"Ссылка",url:u});document.getElementById("ideaTitle").value="";document.getElementById("ideaUrl").value="";renderIdeas()});
+function hideMorePanels(){["paymentsPanel","kidsPanel","documentsPanel","integrationsPanel","notificationsPanel","privacyPanel","settingsPanel","askPanel"].forEach(function(id){document.getElementById(id).style.display="none"});document.getElementById("moreHome").style.display="none"}
+function moreHome(){hideMorePanels();document.getElementById("moreHome").style.display="block"}
+function openMore(which){show("more");hideMorePanels();document.getElementById(which+"Panel").style.display="block";if(which==="payments")renderPayments()}
+function renderPayments(){
+ var paid=payments.filter(function(x){return x.paid}).length,pct=Math.round(paid/payments.length*100);
+ document.getElementById("paySummary").textContent=paid+" из "+payments.length+" оплачено";document.getElementById("payPct").textContent=pct+"%";document.getElementById("payBar").style.width=pct+"%";document.getElementById("payRemain").textContent="Осталось: "+(payments.length-paid);
+ document.getElementById("paymentsList").innerHTML=payments.map(function(p,i){return '<div class="row"><span class="check '+(p.paid?'done':'')+'">'+(p.paid?'✓':'○')+'</span><div class="rowMain"><strong>'+esc(p.title)+'</strong><small>'+p.amount.toLocaleString("ru-RU")+' ₽ · '+esc(p.due)+'</small></div><button class="back" onclick="togglePay('+i+')">'+(p.paid?'Вернуть':'Оплачено')+'</button></div>'}).join("");
+}
+function togglePay(i){payments[i].paid=!payments[i].paid;renderPayments()}
+function ask(){var q=document.getElementById("askInput").value.toLowerCase(),a=document.getElementById("answer");a.style.display="block";if(q.includes("осаг")||q.includes("страх"))a.innerHTML="<strong>Найдено:</strong> ОСАГО действует до 18.06.2027.<br><span class='muted'>Источник: цифровой паспорт автомобиля → ОСАГО.</span>";else if(q.includes("озер")||q.includes("поезд"))a.innerHTML="<strong>Найдено:</strong> Выходные у озера, 26–27 сентября.<br><span class='muted'>Источник: Поездки → Выходные у озера.</span>";else a.innerHTML="<strong>Нет подтверждённого ответа.</strong><br><span class='muted'>Family HQ не придумывает сведения, если в семейной памяти нет источника.</span>"}
+var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById("voiceBtn").addEventListener("click",function(){
+ var hint=document.getElementById("voiceHint");if(!Speech){hint.textContent="Голосовой ввод недоступен в этом браузере — текстовый ввод остаётся основным fallback.";return}
+ var r=new Speech();r.lang="ru-RU";hint.textContent="Слушаю…";r.onresult=function(e){document.getElementById("captureInput").value=e.results[0][0].transcript;hint.textContent="Речь преобразована в текст. Проверьте и добавьте запись."};r.onerror=function(){hint.textContent="Не удалось распознать речь. Можно продолжить текстом."};r.start();
+});
+renderTasks();renderIdeas();renderPayments();moreHome();
+</script>
+</body>
+</html>
