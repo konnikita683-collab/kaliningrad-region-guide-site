@@ -63,6 +63,48 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 @media(max-width:560px){.vehicle{grid-template-columns:92px minmax(0,1fr) auto}.carPic.vector{width:90px;height:62px}.vehicleAppearanceControls{grid-template-columns:1fr 1fr}.vehicleRandom{grid-column:1/-1}}
 @media(max-width:380px){.vehicle{grid-template-columns:82px minmax(0,1fr) auto}.carPic.vector{width:80px;height:58px}.vehicleAppearanceControls{grid-template-columns:1fr}}
 
+
+/* Approved mockup alignment — canonical static review */
+:root{--bg:#fff;--card:#fff;--ink:#101828;--muted:#687386;--line:#e6ebf2;--blue:#1683ff;--blue2:#eaf4ff;--green:#11a36a;--amber:#d88a00;--red:#ee3138;--shadow:0 2px 10px rgba(15,23,42,.035)}
+html,body{max-width:100%;overflow-x:hidden}
+body{background:#fff;color:var(--ink)}
+.shell{width:min(430px,100%);min-height:100dvh;margin:0 auto;padding:0 14px calc(78px + env(safe-area-inset-bottom));background:#fff}
+.safety{margin:0 -14px 8px;padding:7px 14px;border:0;border-bottom:1px solid #edf0f4;border-radius:0;background:#f8fafc;color:#728096;font-size:10px;display:block;text-align:center;letter-spacing:.01em}
+.safety strong{font-size:10px;color:#506078}
+.header{padding:8px 0 12px;align-items:flex-start}.header h1{font-size:25px;line-height:1.08;color:#101828}.header p{font-size:13px;margin-top:5px}.eyebrow{font-size:9px;color:#748197;letter-spacing:.05em}
+.card{border-radius:13px;padding:11px;box-shadow:var(--shadow)}.section{margin-top:18px}.sectionBar{margin:0 0 8px}.sectionBar h2,.sectionBar h3{font-size:16px}.count{font-size:11px}
+.capture{grid-template-columns:minmax(0,1fr) 34px 42px;border-radius:15px;padding:6px 7px 6px 12px;box-shadow:0 3px 12px rgba(25,38,60,.04)}.capture input{font-size:14px}.round{border-radius:10px}.round.primary{background:#1683ff;color:#fff}
+.stack{gap:8px}.attention{grid-template-columns:38px minmax(0,1fr) auto 16px;padding:10px;border-radius:13px;box-shadow:none}.attention.danger{background:#fff0f0;border-color:#ffdada}.attention.warn{background:#fff6dc;border-color:#f8e9bd}.attention .iconSurface{width:34px;height:34px;border-radius:50%;border:0}.attention.danger .iconSurface{background:#ffe0e0;color:#ee3138}.attention.warn .iconSurface{background:#fff0bf;color:#b77700}.attention strong{font-size:13px}.attention small{font-size:10px}.attention>.pictogram{width:15px;height:15px;color:#7c899a}
+.tripCard{grid-template-columns:92px minmax(0,1fr) 18px;gap:10px;padding:6px;box-shadow:none}.tripArt{width:92px;height:108px;border-radius:10px}.tripInfo strong{font-size:14px}.tripInfo small{font-size:11px}.tripMeta{font-size:10px}
+.eventCard{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) 18px;gap:9px;align-items:center;text-align:left;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;color:inherit}.eventCard .iconSurface{background:#e8f3ff;color:#1683ff;border:0}.eventCard strong{font-size:13px}.eventCard small{display:block;color:var(--muted);font-size:10px;margin-top:2px}
+.documentAlert{width:100%;display:grid;grid-template-columns:38px minmax(0,1fr) 18px;gap:9px;align-items:center;text-align:left;background:#fff8e7;border:1px solid #f3e4b6;border-radius:13px;padding:10px;color:inherit}.documentAlert .iconSurface{background:#fff0bd;color:#b97700;border:0}.documentAlert strong{font-size:13px}.documentAlert small{display:block;color:#9b6809;font-size:10px;margin-top:2px}
+.shortcutGrid{display:none}
+.segments{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;background:#f2f5f9;border-radius:12px;padding:4px;margin:0 0 10px}.segments.three{grid-template-columns:repeat(3,minmax(0,1fr))}.segments button{min-height:32px;border:0;border-radius:9px;background:transparent;color:#647187;font-size:10px}.segments button.active{background:#1683ff;color:#fff}
+.create{border-radius:12px;margin:8px 0 12px;box-shadow:none}.create summary{padding:11px 0;font-size:11px;color:#0874e7}
+.row{padding:10px 7px}.rowMain strong{font-size:12px}.row small{font-size:10px}.check{width:24px;height:24px}.badge{font-size:9px;padding:4px 7px}
+.groupTitle{font-size:13px;margin:14px 0 6px;color:#101828}.taskGroup{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.taskGroup .row{padding:10px 9px;grid-template-columns:26px minmax(0,1fr) auto 20px}
+.tripHeroPhoto{height:190px;border-radius:14px}.hero{box-shadow:none}
+.ideaGrid{grid-template-columns:1fr;gap:7px}.idea{box-shadow:none}
+.vehicle{grid-template-columns:108px minmax(0,1fr) 18px;padding:8px;box-shadow:none}.carPic.vector{width:108px;height:66px;border-radius:10px}.mileage{font-size:10px}.mileage strong{font-size:14px}
+.vehicleAppearance{border-radius:12px;box-shadow:none;padding:11px}.vehicleAppearanceHead strong{font-size:11px}.vehicleAppearanceControls{grid-template-columns:1fr 1fr}.vehicleRandom{grid-column:1/-1}
+.carUrgent{width:100%;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:9px;align-items:center;margin-top:10px;padding:11px;border:1px solid #ffd4d4;background:#fff0f0;border-radius:13px;text-align:left;color:inherit}.carUrgent .iconSurface{background:#ffe0e0;color:#e52c36;border:0}.carUrgent div{display:grid;gap:2px}.carUrgent small{font-size:9px;color:#b04549}.carUrgent strong{font-size:12px}.carUrgent em{font-size:9px;color:#e02b34;font-style:normal}.carUrgent b{font-size:9px;background:#ee353b;color:#fff;border-radius:8px;padding:6px 8px}
+.metrics{grid-template-columns:1fr;gap:0;border:1px solid var(--line);border-radius:13px;overflow:hidden}.metric.clickable{border:0;border-bottom:1px solid #edf0f4;border-radius:0;padding:9px 10px}.metric.clickable:last-child{border-bottom:0}.metric{grid-template-columns:34px minmax(0,1fr) auto}.metric .iconSurface{border:0}.metric strong{font-size:12px}.metric small{font-size:10px}
+.timeline.card{padding:0;box-shadow:none}.timeline .row{grid-template-columns:30px minmax(0,1fr) 16px;padding:9px}
+.menu{gap:7px}.menu .card{grid-template-columns:38px minmax(0,1fr) 16px;border-radius:12px;padding:9px 10px;box-shadow:none}.menu p{font-size:10px}.menu strong{font-size:12px}.menu .iconSurface{width:34px;height:34px;border:0}
+.familySummary{display:grid;grid-template-columns:auto minmax(0,1fr) 18px;gap:9px;align-items:center;width:100%;border:1px solid var(--line);background:#fff;border-radius:13px;padding:11px;text-align:left;color:inherit}.familyFaces{display:flex}.familyFaces i{width:30px;height:30px;margin-right:-7px;border-radius:50%;border:2px solid #fff;background:#eef2f7;display:grid;place-items:center;font-style:normal;font-size:9px;font-weight:800;color:#516074}.familySummary span:nth-child(2){display:grid;gap:2px;margin-left:5px}.familySummary strong{font-size:13px}.familySummary small{font-size:10px;color:var(--muted)}
+.familyList{border:1px solid var(--line);border-radius:13px;overflow:hidden}.familyMember{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr) auto 16px;gap:8px;align-items:center;border:0;border-bottom:1px solid #edf0f4;background:#fff;padding:9px;text-align:left;color:inherit}.familyMember:last-child{border-bottom:0}.avatar.small{width:34px;height:34px;font-size:10px}.familyMember div{display:grid;gap:2px}.familyMember strong{font-size:12px}.familyMember small{font-size:10px;color:var(--muted)}.familyMember em{font-size:9px;font-style:normal;background:#e8f8f1;color:#078a57;border-radius:7px;padding:5px 6px}
+.child{border-radius:13px;box-shadow:none;padding:11px}.cat{border-radius:12px!important;padding:9px 10px!important;box-shadow:none!important}
+.payHead strong{font-size:15px}.progress{height:6px}.progress span{background:#16b875}
+.notice{font-size:10px;border-radius:12px}
+.memory .search{grid-template-columns:minmax(0,1fr) auto}.answer{border-radius:13px}
+.nav{width:min(430px,100%);height:calc(66px + env(safe-area-inset-bottom));gap:0;padding:6px 8px env(safe-area-inset-bottom);background:rgba(255,255,255,.97);border-top:1px solid #e3e8ef}.nav button{border-radius:0;padding:3px;color:#7b8799;font-size:9px}.nav button.active{background:transparent;color:#087cf0}.nav .nicon{margin:0 0 3px}.nav .pictogram{width:21px;height:21px}
+.modal{padding:0;align-items:flex-end}.modalCard{width:min(430px,100%);max-height:94dvh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom))}
+.eventSheet{position:fixed;inset:0;z-index:70;display:none;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.35)}.eventSheet.open{display:flex}.eventSheet form{width:min(430px,100%);max-height:94dvh;overflow:auto;background:#fff;border-radius:20px 20px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}.eventSheet header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}.eventSheet header button{justify-self:start;border:0;background:transparent;color:#0a7cea;padding:4px 0}.eventSheet label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#38465a}.eventSheet input,.eventSheet select,.eventSheet textarea{width:100%;border:1px solid #dbe3ed;border-radius:10px;background:#fff;color:#101828;padding:10px 11px}.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(min-width:700px){body{background:#eef2f6}.shell{margin:22px auto;border-radius:34px;box-shadow:0 18px 60px rgba(18,33,52,.14);overflow:hidden;border:1px solid #dfe5ed;min-height:860px}.nav{bottom:22px;border-radius:0 0 34px 34px}}
+@media(max-width:380px){.shell{padding-left:10px;padding-right:10px}.tripCard{grid-template-columns:78px minmax(0,1fr) 16px}.tripArt{width:78px;height:104px}.vehicle{grid-template-columns:92px minmax(0,1fr) 16px}.carPic.vector{width:92px}}
+
+
+.inboxGuide{display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px;align-items:start;margin-top:8px;border:1px solid #d7e7fb;border-radius:12px;background:#eef6ff;padding:10px;color:#4b6786}.inboxGuide p{margin:0;font-size:10px;line-height:1.45}.inboxApprovedActions{display:flex;gap:7px}
 </style>
 </head>
 <body>
@@ -72,6 +114,7 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 <symbol id="i-trip" viewBox="0 0 24 24"><path d="M6 19c4.5-1 6.7-3.2 7.8-6.5M14 4.5 20 3l-1.5 6m1.5-6-7 7"/><circle cx="6" cy="19" r="2"/></symbol>
 <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 15.5h16l-1.6-5.1a2 2 0 0 0-1.9-1.4h-9a2 2 0 0 0-1.9 1.4L4 15.5ZM3 15.5v3h2M21 15.5v3h-2"/><circle cx="7" cy="18.5" r="1.5"/><circle cx="17" cy="18.5" r="1.5"/></symbol>
 <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h14"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
 <symbol id="i-kids" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.3"/><path d="M3.5 20c.5-4 2.5-6 5.5-6s5 2 5.5 6M14.5 15c2.7.1 4.5 1.8 5 5"/></symbol>
 <symbol id="i-payment" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></symbol>
 <symbol id="i-memory" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4M8.5 11h5M11 8.5v5"/></symbol>
@@ -92,28 +135,43 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 <div class="safety"><strong>Интерактивный MVP v2</strong><span>Только фиктивные данные · ничего не сохраняется</span></div>
 
 <section id="today" class="workspace active">
-  <div class="header"><div><h1>Доброе утро!</h1><p>пятница, 18 сентября 2026</p></div><button class="round" onclick="openMore('ask')" aria-label="Спроси Family HQ"><svg class="pictogram" aria-hidden="true"><use href="#i-memory"></use></svg></button></div>
+  <div class="header"><div><h1>Доброе утро, Алексей!</h1><p>понедельник, 21 сентября 2026</p></div><button class="round" onclick="openMore('ask')" aria-label="Спроси Family HQ"><svg class="pictogram" aria-hidden="true"><use href="#i-memory"></use></svg></button></div>
   <form class="capture" id="captureForm"><input id="captureInput" aria-label="Новая запись Inbox" maxlength="1000" placeholder="Быстро записать..."><button type="button" class="round" id="voiceBtn" aria-label="Голосовой ввод"><svg class="pictogram" aria-hidden="true"><use href="#i-mic"></use></svg></button><button class="round primary" type="submit">＋</button></form>
   <div id="voiceHint" class="muted" style="margin:6px 4px 0"></div>
-  <div class="section" id="inboxSection" style="display:none"><div class="sectionBar"><h2>Входящие</h2><span class="count" id="inboxCount">0</span></div><div class="inbox" id="inboxList"></div></div>
-  <div class="section"><div class="sectionBar"><h2>Требует внимания</h2><span class="count">4</span></div><div class="stack">
-    <button class="card attention danger" onclick="show('tasks')"><span class="icon">!</span><div><strong>Оплатить хранение шин</strong><small>Задача · Сегодня</small></div><span>›</span></button>
-    <button class="card attention warn" onclick="openMore('payments')"><span class="icon">₽</span><div><strong>Хранение шин</strong><small>3 200 ₽ · до 20 сентября</small></div><span>›</span></button>
+  <div class="section"><div class="sectionBar"><h2>Требует внимания</h2><button class="back" onclick="show('tasks')">Все</button></div><div class="stack">
+    <button class="card attention danger" onclick="show('tasks')"><span class="iconSurface"><svg class="pictogram"><use href="#i-task"></use></svg></span><div><strong>Оплатить секцию</strong><small>Соня · Сегодня</small></div><span class="badge" style="background:#ffe0e2;color:#d72831">Просрочено</span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
+    <button class="card attention warn" onclick="openMore('payments')"><span class="iconSurface"><svg class="pictogram"><use href="#i-payment"></use></svg></span><div><strong>Паркинг</strong><small>5 000 ₽ · до 20.09</small></div><span class="badge amber">Осталось 2 дня</span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
+    <button class="card attention warn" onclick="show('car')"><span class="iconSurface"><svg class="pictogram"><use href="#i-car"></use></svg></span><div><strong>Проверить шум тормозов</strong><small>Семейный автомобиль</small></div><span class="badge amber">Запланировать</span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
   </div></div>
-  <div class="section"><div class="sectionBar"><h2>Ближайшее</h2><button class="back" onclick="show('trips')">Все</button></div>
-    <button class="card tripCard" onclick="openTrip(0)"><span class="tripArt"><img src="./demo-trip.jpg" alt="Лесное озеро"></span><span class="tripInfo"><span class="eyebrow">Поездка</span><strong>Выходные у озера</strong><small>26–27 сентября</small><span class="tripMeta"><span>4 участника</span><span>Чек-лист 4/7</span></span></span><span>›</span></button>
+  <div class="section"><div class="sectionBar"><h2>Ближайшее событие</h2><button class="back" onclick="openEvent()">Все</button></div>
+    <button class="eventCard" onclick="openEvent()"><span class="iconSurface"><svg class="pictogram"><use href="#i-calendar"></use></svg></span><span><strong>Футбольная секция</strong><small>Сегодня, 18:00–19:00</small><small>Миша · Спорт</small></span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
   </div>
-  <div class="section shortcutGrid"><button class="shortcut" onclick="openMore('kids')"><span class="shortcutIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-kids"></use></svg></span><strong>Дети и школа</strong><small>Расписание и важное</small></button><button class="shortcut" onclick="openMore('payments')"><span class="shortcutIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-payment"></use></svg></span><strong>Платежи</strong><small>Закрытие месяца</small></button><button class="shortcut" onclick="openMore('ask')"><span class="shortcutIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-memory"></use></svg></span><strong>Спроси HQ</strong><small>По семейной памяти</small></button></div>
+  <div class="section"><div class="sectionBar"><h2>Ближайшая поездка</h2><button class="back" onclick="show('trips')">Все</button></div>
+    <button class="card tripCard" onclick="openTrip(0)"><span class="tripArt"><img src="./demo-trip.jpg" alt="Лесное озеро"></span><span class="tripInfo"><strong>Выходные у озера</strong><small>26–27 сентября 2026</small><span class="tripMeta"><span>4 участника</span><span>Чек-лист 4/7</span></span></span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
+  </div>
+  <div class="section"><div class="sectionBar"><h2>Документы и платежи</h2><button class="back" onclick="openMore('documents')">Все</button></div>
+    <button class="documentAlert" onclick="openMore('documents')"><span class="iconSurface"><svg class="pictogram"><use href="#i-file"></use></svg></span><span><strong>ОСАГО</strong><small>Осталось 18 дней</small></span><svg class="pictogram"><use href="#i-chevron"></use></svg></button>
+  </div>
+</section>
+
+<section id="inboxWorkspace" class="workspace">
+  <div class="header"><button class="back" onclick="show('today')">‹ Сегодня</button><div style="text-align:center"><h1 style="font-size:24px">Входящие</h1><p>Разберите информацию из любых источников</p></div><span></span></div>
+  <div class="segments three"><button class="active">Все <span id="inboxCount">0</span></button><button>Новые</button><button>Обработанные</button></div>
+  <div class="inboxGuide"><span class="iconSurface"><svg class="pictogram"><use href="#i-task"></use></svg></span><p>Сюда можно пересылать текст и ссылки. Family HQ сначала предлагает действие и только после подтверждения создаёт объект.</p></div>
+  <div class="section" id="inboxSection" style="display:none"><div class="inbox" id="inboxList"></div></div>
 </section>
 
 <section id="tasks" class="workspace">
-  <div class="header"><div><span class="eyebrow">Личные и семейные</span><h1>Задачи</h1></div></div>
+  <div class="header"><div><h1>Задачи</h1><p>Личные и семейные задачи</p></div></div>
+  <div class="segments"><button class="active">Все</button><button>Я</button><button>Взрослые</button><button>Дети</button></div>
   <details class="create"><summary>＋ Новая задача</summary><form class="form" id="taskForm"><label>Что сделать<input id="newTask" required placeholder="Например: позвонить в школу"></label><label>Дата<input id="taskDue" type="date"></label><label>Повтор<select id="repeat"><option>Не повторять</option><option>Еженедельно</option><option>Ежемесячно</option><option>Ежегодно</option><option>Свой интервал</option><option>После выполнения</option></select></label><label>Свой интервал — каждые<input id="customInterval" type="number" min="2" max="120" value="2"></label><label>Единица<select id="customUnit"><option value="weeks">недели</option><option value="months">месяцы</option><option value="years">годы</option></select></label><button class="primaryBtn">Добавить задачу</button></form></details>
-  <div class="section"><div class="sectionBar"><h2>Открытые</h2><span class="count" id="taskCount">2</span></div><div class="card" id="taskList"></div></div>
+  <div id="taskList"></div>
+  <div class="section"><details class="create"><summary>Выполненные <span id="taskDoneCount">0</span></summary><div class="muted" style="padding:0 0 12px">Завершённые задачи хранятся отдельно от активных.</div></details></div>
 </section>
 
 <section id="trips" class="workspace">
-  <div id="tripListView"><div class="header"><div><span class="eyebrow">Планирование и идеи</span><h1>Поездки</h1></div></div>
+  <div id="tripListView"><div class="header"><div><h1>Поездки</h1><p>Планирование и идеи</p></div></div>
+  <div class="segments three"><button class="active">Ближайшие</button><button>Планируемые</button><button>Прошлые</button></div>
   <details class="create"><summary>＋ Новая поездка</summary><form class="form" id="tripForm"><label>Название<input id="tripTitle" required placeholder="Например: выходные за городом"></label><label>Начало<input id="tripStart" type="date"></label><label>Окончание<input id="tripEnd" type="date"></label><button class="primaryBtn">Создать поездку</button></form></details>
   <div class="stack" id="tripList"></div></div>
   <div id="tripDetail" style="display:none"><div class="header"><button class="back" onclick="closeTrip()">‹ Поездки</button><div style="text-align:center"><span class="eyebrow">Планируем</span><h1 id="tripDetailTitle" style="font-size:22px"></h1></div><span></span></div>
@@ -127,7 +185,8 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 <section id="car" class="workspace">
   <div id="carHome">
     <div class="header"><div><span class="eyebrow">Цифровой паспорт</span><h1>Машина</h1></div></div>
-    <div class="card vehicle"><span class="carPic vector" id="vehicleArt"></span><div><span class="eyebrow">Автомобиль</span><h2 style="margin:3px 0">Семейный автомобиль</h2><div class="muted" id="vehicleBodyLabel">Кроссовер · визуальный профиль</div></div><button class="mileage back" onclick="openCarPanel('mileage')"><small>Пробег</small><strong id="carMileageValue">48 200</strong><small>км ›</small></button></div>
+    <div class="card vehicle"><span class="carPic vector" id="vehicleArt"></span><div><h2 style="margin:3px 0;font-size:14px">Семейный автомобиль</h2><div class="muted" id="vehicleBodyLabel">Кроссовер · визуальный профиль</div><div class="muted"><span id="carMileageValue">48 200</span> км</div></div><button class="back" onclick="openCarPanel('mileage')" aria-label="Пробег">›</button></div>
+    <button class="carUrgent" onclick="openCarPanel('service')"><span class="iconSurface"><svg class="pictogram"><use href="#i-service"></use></svg></span><div><small>Следующее действие</small><strong>Проверить шум тормозов</strong><em>Просрочено на 2 дня</em></div><b>Готово</b></button>
     <div class="vehicleAppearance" aria-label="Настройка внешнего вида автомобиля"><div class="vehicleAppearanceHead"><span class="eyebrow">Внешний вид</span><strong>Кузов и цвет</strong></div><div class="vehicleAppearanceControls"><label>Кузов<select id="vehicleBodySelect" aria-label="Тип кузова"><option value="crossover">Кроссовер</option><option value="sedan">Седан</option><option value="wagon">Универсал</option><option value="hatchback">Хэтчбек</option></select></label><label>Цвет<select id="vehicleColorSelect" aria-label="Цвет кузова"><option value="#3f4650">Графит</option><option value="#e7e9ec">Белый</option><option value="#9aa3ad">Серебристый</option><option value="#274c77">Синий</option><option value="#6e2c2c">Бордовый</option></select></label><button class="vehicleRandom" type="button" onclick="randomVehicleBody()">Случайный кузов</button></div></div>
     <div class="section metrics"><button class="card metric clickable" onclick="openCarPanel('osago')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-shield"></use></svg></span><div><strong>ОСАГО</strong><small>Демо-страховая · до 18.06.2027</small></div></button><button class="card metric clickable" onclick="openCarPanel('kasko')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-shield"></use></svg></span><div><strong>КАСКО</strong><small>Не заполнено</small></div></button><button class="card metric clickable" onclick="openCarPanel('tyres')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-tyre"></use></svg></span><div><strong>Шины</strong><small>Летние · R18 · на машине</small></div></button><button class="card metric clickable" onclick="openCarPanel('service')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-service"></use></svg></span><div><strong>Сервис</strong><small>Последнее: июль 2026</small></div></button></div>
     <div class="section"><div class="sectionBar"><h2>История</h2><span class="count" id="carHistoryCount">3</span></div><div class="card timeline" id="carTimeline"></div><details class="create" style="margin-top:9px"><summary>＋ Добавить событие</summary><form class="form" id="carEventForm"><label>Событие<input id="carEventTitle" required placeholder="Например: мойка радиаторов"></label><label>Дата<input id="carEventDate" type="date"></label><label>Пробег<input id="carEventMileage" type="number" min="0" placeholder="48200"></label><button class="primaryBtn">Добавить в историю</button></form></details></div>
@@ -136,7 +195,9 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 </section>
 
 <section id="more" class="workspace">
-  <div id="moreHome"><div class="header"><div><span class="eyebrow">Настройки и сервисы</span><h1>Ещё</h1></div></div><div class="menu">
+  <div id="moreHome"><div class="header"><div><h1>Ещё</h1><p>Семья, документы и сервисы</p></div></div>
+  <button class="familySummary" onclick="openMore('family')"><span class="familyFaces"><i>А</i><i>М</i><i>С</i><i>М</i></span><span><strong>Семья и доступы</strong><small>4 участника · роли и видимость</small></span><span>›</span></button>
+  <div class="menu">
     <button class="card" onclick="openMore('kids')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-kids"></use></svg></span><div><strong>Дети и школа</strong><p>Расписание, задачи, документы и оплаты ребёнка.</p></div><span>›</span></button>
     <button class="card" onclick="openMore('payments')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-payment"></use></svg></span><div><strong>Обязательные платежи</strong><p>Ежемесячный контроль обязательств.</p></div><span>›</span></button>
     <button class="card" onclick="openMore('documents')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-file"></use></svg></span><div><strong>Документы</strong><p>Сроки, категории и безопасные ссылки.</p></div><span>›</span></button>
@@ -145,13 +206,35 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
     <button class="card" onclick="openMore('privacy')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-lock"></use></svg></span><div><strong>Приватность</strong><p>Границы доступа и Family Memory.</p></div><span>›</span></button>
     <button class="card" onclick="openMore('settings')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-settings"></use></svg></span><div><strong>Настройки</strong><p>Параметры Household.</p></div><span>›</span></button>
     <button class="card" onclick="openMore('ask')"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-memory"></use></svg></span><div><strong>Спроси Family HQ</strong><p>Ответы по семейной памяти с источником.</p></div><span>›</span></button>
+    <button class="card" onclick="openEvent()"><span class="iconSurface"><svg class="pictogram" aria-hidden="true"><use href="#i-calendar"></use></svg></span><div><strong>Новое событие</strong><p>Отдельный экран создания события.</p></div><span>›</span></button>
   </div><div class="notice" style="margin-top:14px">В MVP v2 «Личное» = private: запись видит только создатель. Дети не получают доступ к взрослым объектам через UI или RLS.</div></div>
 
-  <div id="paymentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Месячный контроль</span><h1 style="font-size:24px">Платежи</h1></div><span></span></div><div class="card"><div class="payHead"><strong id="paySummary">1 из 3 оплачено</strong><span class="count" id="payPct">33%</span></div><div class="progress"><span id="payBar" style="width:33%"></span></div><div class="muted" id="payRemain" style="margin-top:7px">Осталось: 2</div></div><div class="section"><div class="card" id="paymentsList"></div></div></div>
+  <div id="familyPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Роли, права и видимость</span><h1 style="font-size:24px">Семья</h1></div><span></span></div>
+    <div class="familyList">
+      <button class="familyMember" onclick="openInfo('Алексей','Владелец · синтетический профиль демо.')"><span class="avatar small">А</span><div><strong>Алексей</strong><small>Владелец</small></div><em>Вы</em><span>›</span></button>
+      <button class="familyMember" onclick="openInfo('Мария','Взрослый · синтетический профиль демо.')"><span class="avatar small">М</span><div><strong>Мария</strong><small>Взрослый</small></div><em>В сети</em><span>›</span></button>
+      <button class="familyMember" onclick="openInfo('Соня','Ребёнок · синтетический профиль демо.')"><span class="avatar small">С</span><div><strong>Соня</strong><small>Ребёнок</small></div><em>В сети</em><span>›</span></button>
+      <button class="familyMember" onclick="openInfo('Миша','Ребёнок · синтетический профиль демо.')"><span class="avatar small">М</span><div><strong>Миша</strong><small>Ребёнок</small></div><em>В сети</em><span>›</span></button>
+    </div>
+    <div class="section"><div class="sectionBar"><h2>Уровни видимости</h2></div><div class="card"><div class="row"><span class="rowIcon"><svg class="pictogram"><use href="#i-kids"></use></svg></span><div class="rowMain"><strong>Общее семье</strong><small>Видно всем участникам</small></div></div><div class="row"><span class="rowIcon"><svg class="pictogram"><use href="#i-lock"></use></svg></span><div class="rowMain"><strong>Только взрослым</strong><small>Видно только взрослым</small></div></div><div class="row"><span class="rowIcon"><svg class="pictogram"><use href="#i-lock"></use></svg></span><div class="rowMain"><strong>Личное</strong><small>Видно только вам</small></div></div></div></div>
+  </div>
+
+  <div id="paymentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Месячный контроль</span><h1 style="font-size:24px">Платежи</h1></div><span></span></div><div class="card"><div class="payHead"><strong id="paySummary">2 из 6 оплачено</strong><span class="count" id="payPct">33%</span></div><div class="progress"><span id="payBar" style="width:33%"></span></div><div class="muted" id="payRemain" style="margin-top:7px">Осталось: 4 · Просрочено: 1</div></div><div class="segments" style="margin-top:10px"><button class="active">Все</button><button>Оплачено</button><button>Осталось</button><button>Просрочено</button></div><div class="section"><div class="card" id="paymentsList"></div></div></div>
 
   <div id="kidsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">School & Kids Autopilot</span><h1 style="font-size:24px">Дети и школа</h1></div><span></span></div><div class="stack"><div class="card child"><div class="childHead"><div class="avatar">Л</div><div><span class="eyebrow">Ребёнок</span><h2 style="margin:3px 0">Лев</h2></div></div><button class="row clickable" onclick="openInfo('Робототехника','Суббота · 11:00. В полном приложении здесь откроется событие ребёнка.')"><span class="rowIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-calendar"></use></svg></span><div class="rowMain"><strong>Робототехника</strong><small>суббота · 11:00</small></div><span>›</span></button><button class="row clickable" onclick="openInfo('Подготовить материалы','Задача ребёнка · до пятницы.')"><span class="rowIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-task"></use></svg></span><div class="rowMain"><strong>Подготовить материалы</strong><small>до пятницы</small></div><span>›</span></button></div><div class="card child"><div class="childHead"><div class="avatar">Е</div><div><span class="eyebrow">Ребёнок</span><h2 style="margin:3px 0">Ева</h2></div></div><button class="row clickable" onclick="openInfo('Английский','Воскресенье · 12:30. В полном приложении здесь откроется событие ребёнка.')"><span class="rowIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-calendar"></use></svg></span><div class="rowMain"><strong>Английский</strong><small>воскресенье · 12:30</small></div><span>›</span></button></div></div></div>
 
-  <div id="documentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Важное и сроки</span><h1 style="font-size:24px">Документы</h1></div><span></span></div><div class="stack"><button class="card cat clickable" onclick="openInfo('Личные документы','Паспорт, справки и другие личные записи. В полном приложении откроется список документов с датами и безопасными ссылками.')"><span class="catIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-user"></use></svg></span><strong>Личные</strong><span class="count">4 ›</span></button><button class="card cat clickable" onclick="openInfo('Документы детей','Документы привязаны к профилю ребёнка и наследуют правила доступа Household.')"><span class="catIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-kids"></use></svg></span><strong>Дети</strong><span class="count">6 ›</span></button><button class="card cat clickable" onclick="openInfo('Документы машины','СТС, сервисные записи и связанные документы автомобиля.')"><span class="catIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-car"></use></svg></span><strong>Машина</strong><span class="count">3 ›</span></button><button class="card cat clickable" onclick="openInfo('Страховки','ОСАГО и КАСКО хранятся как структурированные записи со сроками действия.')"><span class="catIcon"><svg class="pictogram" aria-hidden="true"><use href="#i-shield"></use></svg></span><strong>Страховки</strong><span class="count">2 ›</span></button></div><div class="notice" style="margin-top:12px">Family HQ хранит метаданные и HTTPS-ссылки, а не байты документов и секреты.</div></div>
+  <div id="documentsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Важное и сроки</span><h1 style="font-size:24px">Документы</h1></div><span></span></div>
+    <div class="section" style="margin-top:0"><div class="sectionBar"><h2>Требует внимания</h2></div><button class="documentAlert" onclick="openInfo('Загранпаспорт','Синтетический пример: документ истекает через 45 дней.')"><span class="iconSurface"><svg class="pictogram"><use href="#i-file"></use></svg></span><span><strong>Загранпаспорт</strong><small>Истекает через 45 дней</small></span><svg class="pictogram"><use href="#i-chevron"></use></svg></button></div>
+    <div class="section"><div class="sectionBar"><h2>По категориям</h2></div><div class="stack">
+      <button class="card cat clickable" onclick="openInfo('Личные документы','Паспорт, справки и другие личные записи.')"><span class="catIcon"><svg class="pictogram"><use href="#i-user"></use></svg></span><strong>Личные</strong><span class="count">6 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Документы детей','Документы ребёнка и школьные справки.')"><span class="catIcon"><svg class="pictogram"><use href="#i-kids"></use></svg></span><strong>Дети</strong><span class="count">8 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Документы машины','СТС и связанные записи автомобиля.')"><span class="catIcon"><svg class="pictogram"><use href="#i-car"></use></svg></span><strong>Машина</strong><span class="count">4 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Дом','Домашние документы и договоры.')"><span class="catIcon"><svg class="pictogram"><use href="#i-home"></use></svg></span><strong>Дом</strong><span class="count">3 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Медицина','Только синтетические метаданные.')"><span class="catIcon"><svg class="pictogram"><use href="#i-file"></use></svg></span><strong>Медицина</strong><span class="count">5 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Страховки','ОСАГО и КАСКО со сроками действия.')"><span class="catIcon"><svg class="pictogram"><use href="#i-shield"></use></svg></span><strong>Страховки</strong><span class="count">4 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Образование','Школьные и образовательные документы.')"><span class="catIcon"><svg class="pictogram"><use href="#i-file"></use></svg></span><strong>Образование</strong><span class="count">2 ›</span></button>
+      <button class="card cat clickable" onclick="openInfo('Другое','Прочие метаданные документов.')"><span class="catIcon"><svg class="pictogram"><use href="#i-file"></use></svg></span><strong>Другое</strong><span class="count">2 ›</span></button>
+    </div></div><div class="notice" style="margin-top:12px">Family HQ хранит метаданные и HTTPS-ссылки, а не байты документов и секреты.</div></div>
 
   <div id="integrationsPanel" style="display:none"><div class="header"><button class="back" onclick="moreHome()">‹ Ещё</button><div style="text-align:center"><span class="eyebrow">Внешние сервисы</span><h1 style="font-size:24px">Интеграции</h1></div><span></span></div><div class="card"><strong>Google Calendar</strong><p class="muted">OAuth не подключён. Экспорт и OAuth-синхронизация пока не включены; модель календарных событий уже подготовлена.</p><span class="badge">Не подключено</span></div><div class="card" style="margin-top:8px"><strong>Google Drive</strong><p class="muted">Подключение файлов будет отдельным приватным решением.</p></div></div>
 
@@ -166,13 +249,31 @@ button,input,select{font:inherit}button{cursor:pointer}.shell{width:min(640px,10
 
 <div class="modal" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle"><div class="modalCard"><h2 id="infoModalTitle"></h2><p id="infoModalText"></p><button class="primaryBtn" onclick="closeInfo()">Закрыть</button></div></div>
 <nav class="nav" aria-label="Разделы MVP"><button class="active" data-tab="today" onclick="show('today')"><span class="nicon"><svg class="pictogram" aria-hidden="true"><use href="#i-home"></use></svg></span>Сегодня</button><button data-tab="tasks" onclick="show('tasks')"><span class="nicon"><svg class="pictogram" aria-hidden="true"><use href="#i-task"></use></svg></span>Задачи</button><button data-tab="trips" onclick="show('trips')"><span class="nicon"><svg class="pictogram" aria-hidden="true"><use href="#i-trip"></use></svg></span>Поездки</button><button data-tab="car" onclick="show('car')"><span class="nicon"><svg class="pictogram" aria-hidden="true"><use href="#i-car"></use></svg></span>Машина</button><button data-tab="more" onclick="show('more')"><span class="nicon"><svg class="pictogram" aria-hidden="true"><use href="#i-more"></use></svg></span>Ещё</button></nav>
+<div class="eventSheet" id="eventSheet" role="dialog" aria-modal="true">
+  <form id="eventForm"><header><button type="button" onclick="closeEvent()">Отмена</button><strong>Новое событие</strong><span></span></header>
+    <label>Название события<input required placeholder="Например, секция по плаванию"></label>
+    <label>Кому относится<select><option>Миша</option><option>Соня</option><option>Алексей</option><option>Мария</option></select></label>
+    <label>Видимость<select><option>Общее семье</option><option>Только взрослым</option><option>Личное</option></select></label>
+    <div class="formGrid"><label>Дата<input type="date" value="2026-09-23"></label><label>Время<input type="time" value="18:00"></label></div>
+    <label>Повтор<select><option>Еженедельно</option><option>Не повторять</option><option>Ежемесячно</option></select></label>
+    <label>Google Calendar<select><option>Добавить после подключения</option><option>Не добавлять</option></select></label>
+    <label>Календарь<select><option>Семейный календарь</option></select></label>
+    <label>Напоминание<select><option>За 1 час</option><option>За день</option></select></label>
+    <label>Заметки<textarea rows="3" placeholder="Например, форма, что взять и т.д."></textarea></label>
+    <button class="primaryBtn" type="submit">Создать событие</button>
+  </form>
+</div>
 </main>
 
 <script>
 var tasks=[
- {id:1,title:"Оплатить хранение шин",due:"Сегодня",repeat:"",done:false},
- {id:2,title:"Подготовить материалы к кружку",due:"19 сентября",repeat:"Еженедельно",done:false},
- {id:3,title:"Заказать бытовые фильтры",due:"Вчера",repeat:"",done:true}
+ {id:1,title:"Оплатить секцию",scope:"Соня · Школа",due:"Сегодня",bucket:"today",repeat:"",done:false},
+ {id:2,title:"Купить корм для собаки",scope:"Алексей · Дом",due:"Сегодня",bucket:"today",repeat:"",done:false},
+ {id:3,title:"Забрать справку",scope:"Миша · Школа",due:"Сегодня",bucket:"today",repeat:"",done:true},
+ {id:4,title:"Записать машину на ТО",scope:"Алексей · Машина",due:"Сб, 26.09",bucket:"week",repeat:"",done:false},
+ {id:5,title:"Подготовить документы для поездки",scope:"Мария · Поездки",due:"Пн, 28.09",bucket:"week",repeat:"",done:false},
+ {id:6,title:"Разобрать балкон",scope:"Алексей · Дом",due:"Без срока",bucket:"none",repeat:"",done:false},
+ {id:7,title:"Подобрать зимние ботинки",scope:"Миша · Покупки",due:"Без срока",bucket:"none",repeat:"",done:false}
 ];
 var inbox=[];
 var selectedTripIndex=0;
@@ -186,9 +287,12 @@ var carEvents=[
  {title:"Замена щёток стеклоочистителя",date:"10.05.2026",mileage:"44 600",kind:""}
 ];
 var payments=[
- {title:"Хранение шин",amount:5000,due:"до 20 сентября",paid:false},
- {title:"Интернет",amount:950,due:"до 25 сентября",paid:true},
- {title:"Кружок рисования",amount:4800,due:"до 28 сентября",paid:false}
+ {title:"ЖКХ",amount:4320,due:"до 10.09",paid:true,status:"paid"},
+ {title:"Паркинг",amount:5000,due:"до 15.09",paid:false,status:"late"},
+ {title:"Интернет",amount:1200,due:"до 20.09",paid:false,status:"due"},
+ {title:"Секция",amount:3500,due:"до 25.09",paid:true,status:"paid"},
+ {title:"ОСАГО",amount:0,due:"до 06.10",paid:false,status:"soon"},
+ {title:"КАСКО",amount:15000,due:"до 20.11",paid:false,status:"soon"}
 ];
 
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]})}
@@ -221,7 +325,7 @@ function suggest(t){
 }
 document.getElementById("captureForm").addEventListener("submit",function(e){
  e.preventDefault();var input=document.getElementById("captureInput");var t=input.value.trim();if(!t)return;
- inbox.unshift({text:t,type:suggest(t),confirmed:false});input.value="";renderInbox();
+ inbox.unshift({text:t,type:suggest(t),confirmed:false});input.value="";renderInbox();show("inboxWorkspace");
 });
 function renderInbox(){
  var sec=document.getElementById("inboxSection");sec.style.display=inbox.length?"block":"none";document.getElementById("inboxCount").textContent=inbox.length;
@@ -232,23 +336,26 @@ function renderInbox(){
 }
 function confirmInbox(i){inbox[i].confirmed=true;renderInbox()}
 function convertInbox(i){
- var x=inbox[i];if(x.type==="Задача"){tasks.unshift({id:Date.now(),title:x.text,due:"Без срока",repeat:"",done:false});inbox.splice(i,1);renderInbox();show("tasks");return}
+ var x=inbox[i];if(x.type==="Задача"){tasks.unshift({id:Date.now(),title:x.text,scope:"Семья",due:"Без срока",bucket:"none",repeat:"",done:false});inbox.splice(i,1);renderInbox();show("tasks");return}
  if(x.type==="Поездка"){inbox.splice(i,1);renderInbox();show("trips");return}
  inbox.splice(i,1);renderInbox();alert("В демо показан подтверждённый переход в раздел: "+x.type);
 }
 function fmtIso(iso){if(!iso)return"Без срока";var p=iso.split("-");return p.length===3?(parseInt(p[2],10)+"."+p[1]+"."+p[0]):iso}
 function fmtTripDates(t){var s=fmtIso(t.start),e=fmtIso(t.end);if(!t.start&&!t.end)return"Дата не задана";if(t.start&&t.end)return s+" — "+e;return t.start?s:e}
 function renderTasks(){
- var open=tasks.filter(function(t){return !t.done});
- document.getElementById("taskCount").textContent=open.length;
- document.getElementById("taskList").innerHTML=open.map(function(t){
-  return '<div class="row"><button class="check" aria-label="Выполнить '+esc(t.title)+'" onclick="completeTask('+t.id+')"><span class="checkDot"></span></button><div class="rowMain"><strong>'+esc(t.title)+'</strong><small>'+esc(t.due)+'</small>'+(t.repeat?'<span class="badge blue">Повтор: '+esc(t.repeat)+'</span>':'')+'</div><button class="back" aria-label="Открыть '+esc(t.title)+'" onclick="openInfo(\''+esc(t.title).replace(/&#39;/g,"\\'")+'\',\''+esc((t.due||"Без срока")+(t.repeat?" · "+t.repeat:"")).replace(/&#39;/g,"\\'")+'\')">›</button></div>';
+ var groups=[["Сегодня","today"],["На этой неделе","week"],["Без срока","none"]];
+ document.getElementById("taskDoneCount").textContent=tasks.filter(function(t){return t.done}).length;
+ document.getElementById("taskList").innerHTML=groups.map(function(g){
+   var items=tasks.filter(function(t){return !t.done&&t.bucket===g[1]});
+   return '<div class="section"><div class="sectionBar"><h2>'+g[0]+'</h2></div><div class="taskGroup">'+items.map(function(t){
+     return '<div class="row"><button class="check" aria-label="Выполнить '+esc(t.title)+'" onclick="completeTask('+t.id+')"><span class="checkDot"></span></button><div class="rowMain"><strong>'+esc(t.title)+'</strong><small>'+esc(t.scope||"Семья")+'</small>'+(t.repeat?'<span class="badge blue">Повтор: '+esc(t.repeat)+'</span>':'')+'</div><span class="muted">'+esc(t.due)+'</span><button class="back" aria-label="Открыть '+esc(t.title)+'" onclick="openInfo(\''+esc(t.title).replace(/&#39;/g,"\\'")+'\',\''+esc((t.scope||"Семья")+" · "+(t.due||"Без срока")).replace(/&#39;/g,"\\'")+'\')">›</button></div>';
+   }).join("")+'</div></div>';
  }).join("");
 }
 function completeTask(id){var t=tasks.find(function(x){return x.id===id});if(t)t.done=true;renderTasks()}
 document.getElementById("taskForm").addEventListener("submit",function(e){
  e.preventDefault();var title=document.getElementById("newTask").value.trim();if(!title)return;var due=document.getElementById("taskDue").value;var repeat=document.getElementById("repeat").value,customInterval=parseInt(document.getElementById("customInterval").value||"2",10),customUnit=document.getElementById("customUnit").value;if(repeat==="Свой интервал")repeat="Каждые "+(customInterval>=2?customInterval:2)+" "+(customUnit==="months"?"мес.":customUnit==="years"?"г.":"нед.");
- tasks.unshift({id:Date.now(),title:title,due:fmtIso(due),repeat:repeat==="Не повторять"?"":repeat,done:false});document.getElementById("newTask").value="";document.getElementById("taskDue").value="";renderTasks();
+ tasks.unshift({id:Date.now(),title:title,scope:"Семья",due:fmtIso(due),bucket:due?"week":"none",repeat:repeat==="Не повторять"?"":repeat,done:false});document.getElementById("newTask").value="";document.getElementById("taskDue").value="";renderTasks();
 });
 function renderTripList(){var root=document.getElementById("tripList");root.innerHTML=trips.map(function(t,i){var done=t.checklist.filter(function(x){return x.done}).length;return '<button class="card tripCard" onclick="openTrip('+i+')"><span class="tripArt"><img src="./demo-trip.jpg" alt=""></span><span class="tripInfo"><span class="eyebrow">Планируем</span><strong>'+esc(t.title)+'</strong><small>'+esc(fmtTripDates(t))+'</small><span class="tripMeta"><span>Общее семье</span><span>Чек-лист '+done+'/'+t.checklist.length+'</span></span></span><span>›</span></button>'}).join("")}
 function openTrip(i){selectedTripIndex=typeof i==="number"?i:0;show("trips");document.getElementById("tripListView").style.display="none";document.getElementById("tripDetail").style.display="block";var t=trips[selectedTripIndex];document.getElementById("tripDetailTitle").textContent=t.title;document.getElementById("tripDetailDates").textContent=fmtTripDates(t);renderChecklist();renderIdeas();window.scrollTo(0,0)}
@@ -267,15 +374,18 @@ function updateMileage(e){e.preventDefault();var v=parseInt(document.getElementB
 document.getElementById("carEventForm").addEventListener("submit",function(e){e.preventDefault();var title=document.getElementById("carEventTitle").value.trim(),date=fmtIso(document.getElementById("carEventDate").value),m=document.getElementById("carEventMileage").value;if(!title)return;carEvents.unshift({title:title,date:date==="Без срока"?"Дата не указана":date,mileage:m?parseInt(m,10).toLocaleString("ru-RU"):"—",kind:""});document.getElementById("carEventTitle").value="";document.getElementById("carEventDate").value="";document.getElementById("carEventMileage").value="";renderCarTimeline()});
 function openInfo(title,textValue){document.getElementById("infoModalTitle").textContent=title;document.getElementById("infoModalText").textContent=textValue;document.getElementById("infoModal").classList.add("open")}
 function closeInfo(){document.getElementById("infoModal").classList.remove("open")}
-function hideMorePanels(){["paymentsPanel","kidsPanel","documentsPanel","integrationsPanel","notificationsPanel","privacyPanel","settingsPanel","askPanel"].forEach(function(id){document.getElementById(id).style.display="none"});document.getElementById("moreHome").style.display="none"}
+function hideMorePanels(){["familyPanel","paymentsPanel","kidsPanel","documentsPanel","integrationsPanel","notificationsPanel","privacyPanel","settingsPanel","askPanel"].forEach(function(id){document.getElementById(id).style.display="none"});document.getElementById("moreHome").style.display="none"}
 function moreHome(){hideMorePanels();document.getElementById("moreHome").style.display="block"}
 function openMore(which){show("more");hideMorePanels();document.getElementById(which+"Panel").style.display="block";if(which==="payments")renderPayments()}
+function openEvent(){document.getElementById("eventSheet").classList.add("open")}
+function closeEvent(){document.getElementById("eventSheet").classList.remove("open")}
+document.getElementById("eventForm").addEventListener("submit",function(e){e.preventDefault();closeEvent();openInfo("Событие создано","В демо событие живёт только в текущей сессии.")})
 function renderPayments(){
  var paid=payments.filter(function(x){return x.paid}).length,pct=Math.round(paid/payments.length*100);
- document.getElementById("paySummary").textContent=paid+" из "+payments.length+" оплачено";document.getElementById("payPct").textContent=pct+"%";document.getElementById("payBar").style.width=pct+"%";document.getElementById("payRemain").textContent="Осталось: "+(payments.length-paid);
- document.getElementById("paymentsList").innerHTML=payments.map(function(p,i){return '<div class="row"><span class="check '+(p.paid?'done':'')+'">'+(p.paid?icon("task"):'<span class="checkDot"></span>')+'</span><div class="rowMain"><strong>'+esc(p.title)+'</strong><small>'+p.amount.toLocaleString("ru-RU")+' ₽ · '+esc(p.due)+'</small></div><button class="back" onclick="togglePay('+i+')">'+(p.paid?'Вернуть':'Оплачено')+'</button></div>'}).join("");
+ document.getElementById("paySummary").textContent=paid+" из "+payments.length+" оплачено";document.getElementById("payPct").textContent=pct+"%";document.getElementById("payBar").style.width=pct+"%";document.getElementById("payRemain").textContent="Осталось: "+(payments.length-paid)+" · Просрочено: "+payments.filter(function(x){return x.status==="late"&&!x.paid}).length;
+ document.getElementById("paymentsList").innerHTML=payments.map(function(p,i){var label=p.paid?"Оплачено":p.status==="late"?"Просрочено":p.status==="due"?"Оплатить":"Не скоро";var cls=p.paid?"green":p.status==="late"?"":"amber";return '<div class="row"><span class="rowIcon">'+icon(p.title==="Паркинг"?"car":(p.title==="ОСАГО"||p.title==="КАСКО")?"shield":"payment")+'</span><div class="rowMain"><strong>'+esc(p.title)+'</strong><small>'+(p.amount?p.amount.toLocaleString("ru-RU")+" ₽ · ":"")+esc(p.due)+'</small></div><button class="badge '+cls+'" onclick="togglePay('+i+')">'+label+'</button></div>'}).join("");
 }
-function togglePay(i){payments[i].paid=!payments[i].paid;renderPayments()}
+function togglePay(i){payments[i].paid=!payments[i].paid;if(payments[i].paid)payments[i].status="paid";else if(payments[i].title==="Паркинг")payments[i].status="late";else payments[i].status="due";renderPayments()}
 function ask(){var q=document.getElementById("askInput").value.toLowerCase(),a=document.getElementById("answer");a.style.display="block";if(q.includes("осаг")||q.includes("страх"))a.innerHTML="<strong>Найдено:</strong> ОСАГО действует до 18.06.2027.<br><span class='muted'>Источник: цифровой паспорт автомобиля → ОСАГО.</span>";else if(q.includes("озер")||q.includes("поезд"))a.innerHTML="<strong>Найдено:</strong> Выходные у озера, 26–27 сентября.<br><span class='muted'>Источник: Поездки → Выходные у озера.</span>";else a.innerHTML="<strong>Нет подтверждённого ответа.</strong><br><span class='muted'>Family HQ не придумывает сведения, если в семейной памяти нет источника.</span>"}
 var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
 document.getElementById("voiceBtn").addEventListener("click",function(){
