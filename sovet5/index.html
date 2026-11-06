@@ -12,7 +12,48 @@ function status(s){$('status').textContent=s}
 function conf(){return 'Тема: '+$('topic').value+'\nУсловия: '+$('context').value+'\nПовестка:\n'+agenda.map((q,i)=>(i+1)+'. '+q).join('\n')}
 function lock(v){busy=v;['start','debate','send','minutes','reset','addQ','check'].forEach(x=>$(x).disabled=v)}
 function hist(){return msgs.slice(-28).map(x=>x.name+': '+x.text).join('\n\n').slice(-23000)}
-async function call(system,prompt){let key=$('key').value.trim()||sessionStorage.getItem('sovet5key')||'';if(!key)throw Error('Откройте настройки и укажите бесплатный OpenRouter API-ключ.');const abort=new AbortController(),tid=setTimeout(()=>abort.abort(),90000);try{const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'X-Title':'SOVET/5'},body:JSON.stringify({model:'openrouter/free',max_tokens:550,temperature:.55,messages:[{role:'system',content:system},{role:'user',content:prompt}]}),signal:abort.signal});let j=await res.json();if(!res.ok)throw Error((j.error&&j.error.message)||('HTTP '+res.status));let answer=j.choices?.[0]?.message?.content;if(!answer)throw Error('Модель вернула пустой ответ');return typeof answer==='string'?answer:JSON.stringify(answer)}catch(e){if(e.name==='AbortError')throw Error('Превышено время ожидания. Попробуйте повторить');if(e instanceof TypeError)throw Error('Браузер заблокировал сетевое соединение. Необходимо серверное подключение к модели');throw e}finally{clearTimeout(tid)}}
+function readableAnswer(message){
+  if(!message)return '';
+  if(typeof message.content==='string')return message.content.trim();
+  if(Array.isArray(message.content))return message.content.map(x=>typeof x==='string'?x:(x.text||x.content||'')).join('\n').trim();
+  if(typeof message.output_text==='string')return message.output_text.trim();
+  return '';
+}
+async function call(system,prompt){
+ const key=$('key').value.trim()||sessionStorage.getItem('sovet5key')||'';
+ if(!key)throw Error('Укажите OpenRouter API-ключ в настройках подключения.');
+ const models=['google/gemma-4-31b-it:free','nvidia/nemotron-3.5-lightning:free','openrouter/free'];
+ const reasons=[];
+ for(let i=0;i<models.length;i++){
+   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),115000);
+   try{
+     status('Запрос к бесплатной модели '+(i+1)+'/'+models.length+'…');
+     const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'X-OpenRouter-Title':'SOVET/5'},
+      body:JSON.stringify({model:models[i],max_tokens:2200,temperature:0.4,reasoning:{enabled:false},messages:[{role:'system',content:system+'\nОтвечай содержательно сразу, без внутреннего рассуждения. Итоговый ответ обязателен.'},{role:'user',content:prompt}]}),
+      signal:controller.signal
+     });
+     let j={};try{j=await res.json()}catch{}
+     if(!res.ok){
+       const msg=j.error?.message||('HTTP '+res.status);
+       if([401,403,402].includes(res.status))throw Error('Ключ или доступ к бесплатной модели: '+msg);
+       if(res.status===429)throw Error('Достигнут лимит бесплатных запросов OpenRouter: '+msg);
+       reasons.push(models[i]+': '+msg);continue;
+     }
+     const answer=readableAnswer(j.choices?.[0]?.message);
+     if(answer)return answer;
+     const finish=j.choices?.[0]?.finish_reason||'неизвестна';
+     reasons.push(models[i]+': пустой текст (finish_reason='+finish+')');
+   }catch(e){
+     if(e.name==='AbortError')reasons.push(models[i]+': время ожидания превышено');
+     else if(e instanceof TypeError)throw Error('Ошибка сети при обращении к OpenRouter. Подключение браузера не установлено.');
+     else if(/Ключ или доступ|лимит бесплатных/.test(e.message))throw e;
+     else reasons.push(models[i]+': '+(e.message||String(e)));
+   }finally{clearTimeout(timer)}
+ }
+ throw Error('Не удалось получить содержательный ответ бесплатных моделей. '+reasons.join('; ')+'. Повестка и переписка сохранены; повторите позже.');
+}
 async function round(indices,task){if(busy)return;if(!started){started=true;say('Секретарь','Заседание открыто.\n'+conf(),'sys')}lock(true);halt=false;try{for(let idx of indices){if(halt)break;const r=R[idx];status('Говорит: '+r[0]+'…');const sys='Ты директор по направлению '+r[0]+'. Твоя зона ответственности: '+r[2]+'. Ты участник реального управленческого обсуждения. Говори от первого лица по-русски. Возражай конкретным аргументам коллег, отличай факты от предположений, не выдумывай цифр и законов. При убедительных аргументах меняй позицию с объяснением. Не повторяй другие роли. Ответ 90–170 слов.';const text=await call(sys,conf()+'\nСтенограмма:\n'+hist()+'\nЗадание: '+task);say(r[0],text)}}catch(e){say('Ошибка',String(e.message||e),'err');status('Сбой. Сохранённые данные не потеряны.')}finally{lock(false);if(!halt && !$('status').textContent.startsWith('Сбой'))status('Готово. Можно задавать следующий вопрос.')}}
 $('roles').innerHTML=R.map(r=>'<div class="role"><span class="portrait">'+r[1]+'</span>'+r[0]+'</div>').join('');
 load();renderAgenda();renderMsgs();$('key').value=sessionStorage.getItem('sovet5key')||'';
